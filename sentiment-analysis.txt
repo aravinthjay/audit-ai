@@ -1,0 +1,18 @@
+from transformers import pipeline
+classifiers = pipeline("sentiment-analysis")
+
+sentences = ["The client was very satisfied with the project delivery",
+             "The project significantly over budjet and ahead of the schedule",
+             "The new regulatory framework present both risk and oppurtunities",
+             "The team work quality was nice and has kept the production deadlines"]
+
+for i in sentences:
+  result = classifiers(i)
+  label = result[0]['label']
+  score = result[0]['score']
+  print(f'"{i[:50]}..." {label} ({score:.4f})') 
+
+"The client was very satisfied with the project del..." POSITIVE (0.9988)
+"The project significantly over budjet and ahead of..." POSITIVE (0.9896)
+"The new regulatory framework present both risk and..." NEGATIVE (0.7786)
+"The team work quality was nice and has kept the pr..." POSITIVE (0.9995
