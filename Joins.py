@@ -28,9 +28,8 @@ df_inf = pd.DataFrame(live_interfaces)
 df_srv.to_sql('Servers', conn, index=False, if_exists='replace')
 df_inf.to_sql('Interfaces', conn, index=False, if_exists='replace')
 
-# ------------------------------
-# ❌ Faulty INNER JOIN Query
-# ------------------------------
+
+#Faulty INNER JOIN Query
 faulty_query = """
 SELECT s.Host_ID, s.Role, i.Interface_ID, i.IP_Address
 FROM Servers s
@@ -42,9 +41,8 @@ print("\n--- INNER JOIN Result (SRV-03 Missing) ---")
 df_faulty = pd.read_sql_query(faulty_query, conn)
 print(df_faulty)
 
-# ------------------------------
-# ✅ Correct LEFT JOIN Query
-# ------------------------------
+
+# Correct LEFT JOIN 
 correct_query = """
 SELECT s.Host_ID, s.Role, i.Interface_ID, i.IP_Address
 FROM Servers s
