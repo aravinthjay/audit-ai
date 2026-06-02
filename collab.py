@@ -38,7 +38,7 @@ plt.style.use('seaborn-v0_8-darkgrid')
 sns.set_palette('husl')
 np.random.seed(42)
  
-print("✅ All libraries loaded successfully!")
+print("All libraries loaded successfully!")
 print(f"NumPy: {np.__version__} | Pandas: {pd.__version__}")
 
 
