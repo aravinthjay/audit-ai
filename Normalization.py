@@ -1,9 +1,8 @@
 import pandas as pd
 import sqlite3
 
-# -------------------------------
+
 # STEP 0: Create initial dataset (0NF)
-# -------------------------------
 
 conn_challenge = sqlite3.connect(':memory:')
 
@@ -24,9 +23,8 @@ print("---- 0NF TABLE ----")
 print(df_0nf)
 
 
-# -------------------------------
+
 # STEP 1: Convert to 1NF
-# -------------------------------
 
 df_1nf = df_0nf.copy()
 
@@ -44,10 +42,10 @@ print("\n---- 1NF TABLE ----")
 print(df_1nf)
 
 
-# -------------------------------
+
 # STEP 2: Convert to 2NF
 # Remove partial dependency (Student_Name depends only on Student_ID)
-# -------------------------------
+
 
 # Student Table
 student_df = df_1nf[['Student_ID', 'Student_Name']].drop_duplicates()
@@ -65,10 +63,9 @@ print("\n---- VISIT TABLE (2NF) ----")
 print(visit_df)
 
 
-# -------------------------------
+
 # STEP 3: Convert to 3NF
 # Remove transitive dependency (Doctor_Clinic depends on Doctor_ID)
-# -------------------------------
 
 # Doctor Table
 doctor_df = df_1nf[['Doctor_ID', 'Doctor_Name', 'Doctor_Clinic']].drop_duplicates()
@@ -90,7 +87,7 @@ print(final_visit_df)
 # FINAL STRUCTURE (3NF)
 # -------------------------------
 
-print("\n✅ FINAL NORMALIZED TABLES:")
+print("\n FINAL NORMALIZED TABLES:")
 print("\n1. Students")
 print(student_df)
 
