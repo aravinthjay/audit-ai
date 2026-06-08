@@ -1,0 +1,23 @@
+1. Patient web portal
+Application Gateway
+Public HTTPS + URL-based routing (/api, /static) + WAF + SSL termination → Layer 7 use case
+
+2. Clinical API (internal)
+Load Balancer
+Internal VNet + TCP (port 8443) + no HTTP inspection → Layer 4 distribution
+
+3. DICOM image streaming
+Load Balancer
+Large TCP payloads + long-lived connections + non-HTTP → low latency, no inspection
+
+4. Auth service (header routing)
+Application Gateway
+Header-based routing + multi-tenant routing + end-to-end TLS → Layer 7
+
+5. Legacy SOAP lab service
+Load Balancer
+Raw TCP (port 9000) + no payload/header modification → Layer 4
+
+6. Admin dashboard (hostname)
+Application Gateway
+Host-based routing (admin vs www) + HTTPS + autoscaling → Layer 7
