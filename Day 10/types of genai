@@ -6,3 +6,14 @@
 | **D** | Synthetic Fraud Training Data    | Synthetic Data Generation              | GPT-4o            | Claude 3.5 Sonnet | Fraud Detection  | 60%        | £250k/yr       | +40%         |
 | **E** | Personalised Marketing Copy      | Text Generation                        | GPT-4o            | Claude 3.5 Sonnet | Growth           | 85%        | £300k/yr       | +28%         |
 | **F** | Developer Boilerplate Generation | Code Generation                        | GPT-4o            | Claude 3.5 Sonnet | Engineering      | 70%        | £220k/yr       | +20%         |
+
+
+
+| Card  | Why this GenAI Type?                                                                                   |
+| ----- | ------------------------------------------------------------------------------------------------------ |
+| **A** | Emails are unstructured text that must be classified, translated, and routed automatically.            |
+| **B** | Long regulatory documents require extraction of key obligations and concise summaries.                 |
+| **C** | Fraud systems generate signals that must be converted into customer-friendly explanations.             |
+| **D** | Synthetic examples help train ML models while protecting customer privacy and complying with GDPR.     |
+| **E** | Marketing teams need large volumes of personalized content variations for different customer segments. |
+| **F** | Repetitive integration and API code can be automatically generated from specifications.                |
