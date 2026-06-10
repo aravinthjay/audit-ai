@@ -1,0 +1,8 @@
+| Card  | Business Challenge               | GenAI Type                             | Recommended Model | Alternative Model | NexaBank Domain  | Time Saved | Cost Reduction | Quality Lift |
+| ----- | -------------------------------- | -------------------------------------- | ----------------- | ----------------- | ---------------- | ---------- | -------------- | ------------ |
+| **A** | Multilingual Email Triage        | Text Generation                        | Claude 3.5 Sonnet | GPT-4o            | Customer Service | 68%        | £320k/yr       | +22%         |
+| **B** | Regulatory Update Review         | Summarization + Information Extraction | Claude 3.5 Sonnet | GPT-4o            | Compliance       | 75%        | £280k/yr       | +30%         |
+| **C** | Fraud Alert Narratives           | Text Generation                        | GPT-4o            | Claude 3.5 Sonnet | Fraud Detection  | 82%        | £350k/yr       | +35%         |
+| **D** | Synthetic Fraud Training Data    | Synthetic Data Generation              | GPT-4o            | Claude 3.5 Sonnet | Fraud Detection  | 60%        | £250k/yr       | +40%         |
+| **E** | Personalised Marketing Copy      | Text Generation                        | GPT-4o            | Claude 3.5 Sonnet | Growth           | 85%        | £300k/yr       | +28%         |
+| **F** | Developer Boilerplate Generation | Code Generation                        | GPT-4o            | Claude 3.5 Sonnet | Engineering      | 70%        | £220k/yr       | +20%         |
