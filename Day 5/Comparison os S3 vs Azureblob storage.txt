@@ -1,0 +1,7 @@
+LinkedIn website list of features Implementation :
+
+1.profile pic upload - s3 best choice - due it larger CDN compare with blob storage
+2.video upload of introduction - s3 best choice - due to its multipart upload and streaming
+3.Resume upload - Azure blob storage best choice - due it's integration with microsoft services
+4.Job description documents - Azure blob storage best choice - due to it's strong document intelligence
+5.Engagment metrics - Azure blob storage best choice - due to its better hierarical name space
