@@ -1,1 +1,0 @@
-As per the given data I prefer ETL pipeline because it could reduce the storage expensive and before loading any flaw or invalid data's could be validated on then it could be loaded
