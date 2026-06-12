@@ -1,0 +1,31 @@
+        [Clinicians / Users]
+                 |
+                 v
+          [HealthBot App]
+                 |
+                 v
+        [Query Processing]
+                 |
+                 v
+        [Embedding Model]
+                 |
+                 v
+         [Vector Search]
+     (Azure AI Search / FAISS)
+                 |
+                 v
+        [Clinical Documents]
+        (2M+ Knowledge Base)
+                 |
+                 v
+        [Top Relevant Data]
+                 |
+                 v
+              [LLM]
+     (Azure OpenAI / Claude)
+                 |
+                 v
+        [Generated Answer]
+                 |
+                 v
+        [Response to User]
