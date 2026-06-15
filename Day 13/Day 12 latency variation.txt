@@ -1,0 +1,12 @@
+The latency variation observed in the RAG pipeline impacts evaluation metrics such as BLEU, ROUGE, and faithfulness. From the experiment, FAIS provides low latency retrieval but may retrieve less relevant context,
+In contrast, Azure AI Search performs hybrid retrieval (BM25 + vector
++ ranking), which increases latency but improves the quality of retrieved documents,
+leading to higher faithfulness.
+The LLM generation stage contributes the most to latency variation. Queries with higher generation latency typically produce longer responses,
+which improves
+ROUGE scores as more relevant information is covered. However,
+this increase in response length can reduce BLEU scores because the generated text may deviate
+from exact reference phrasing.
+Therefore,
+there is a trade-off: lower latency systems provide faster responses but may reduce faithfulness and coverage, while higher latency systems improve
+answer quality at the cost of response time.
