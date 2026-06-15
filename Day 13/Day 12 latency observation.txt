@@ -1,0 +1,9 @@
+The latency variation observed in Day 12 Colab 2 is caused by multiple factors across the RAG pipeline. First, different vector databases contribute varying retrieval times due to their architecture. FAISS is fastest and most stable because it operates in-memory without network overhead. Pinecone shows moderate latency due to serverless cloud calls and network delays. Azure AI Search has higher latency because it performs hybrid retrieval combining BM25, vector search, and ranking, which adds computation.
+However, the primary cause of latency variation is not the vector database but the LL generation stage. From the waterfall chart,
+the generation step
+contributes the largest portion of total latency and varies significantly
+across
+queries. This variation occurs because different queries produce outputs of
+different lengths and require different levels of reasoning, leading to inconsistent response times.
+Additionally, embedding time is included in the total latency, adding a small but consistent overhead. The difference between p50 and p95 latency further indicates the presence of outlier queries that take much longer, mainly due to increased generation time.
+Therefore, while infrastructure and retrieval method affect latency, the major cause of latency variation is the variability in LLM generation time combined with cloud network overhead in managed databases.
