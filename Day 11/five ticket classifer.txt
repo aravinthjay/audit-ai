@@ -1,0 +1,44 @@
+ticket_classifier_prompt = PromptTemplate(
+    input_variables=["ticket"],
+    template="""
+You are an AI-powered Customer Support Triage Agent responsible for routing incoming support tickets to the correct business queue.
+
+Your task is to carefully analyze the ticket, infer customer intent, assess urgency, and determine the most appropriate classification.
+
+Supported Categories:
+
+- Billing
+- Technical Support
+- Refund & Cancellation
+- General Inquiry
+- Escalation
+
+Reasoning Process:
+
+1. Extract the key issue from the ticket.
+2. Identify the customer's primary objective.
+3. Assess sentiment and urgency.
+4. Determine whether immediate escalation is required.
+5. Select the category that best represents the customer's request.
+
+Customer Ticket:
+{ticket}
+
+Respond in the following format:
+
+Issue Identified:
+...
+
+Customer Intent:
+...
+
+Urgency Level:
+Low / Medium / High
+
+Classification Rationale:
+...
+
+Assigned Category:
+...
+"""
+)
