@@ -1,0 +1,58 @@
+User Uploads Time-Series Dataset
+            ↓
+Data Profiling & Schema Validation
+(Identify columns, target variable, data types, metadata)
+            ↓
+Timestamp Parsing & Frequency Detection
+(Determine hourly, daily, weekly, monthly frequency)
+            ↓
+Time Continuity Validation
+(Detect missing timestamps, gaps, and irregular intervals)
+            ↓
+Data Quality Assessment
+(Check null values, duplicates, inconsistencies, and data integrity)
+            ↓
+Intelligent Missing Data Treatment
+(Forward Fill, Interpolation, Seasonal Imputation, etc.)
+            ↓
+Automated Exploratory Data Analysis (EDA)
+(Summary statistics and data distribution analysis)
+            ↓
+Time-Series Visualization Engine
+(Trend, volatility, structural breaks, and pattern visualization)
+            ↓
+Trend Extraction & Long-Term Pattern Analysis
+(Rolling statistics, decomposition, STL analysis)
+            ↓
+Seasonality Discovery & Cycle Detection
+(ACF, PACF, seasonal decomposition, periodicity analysis)
+            ↓
+Anomaly & Outlier Detection
+(Statistical and decomposition-based anomaly identification)
+            ↓
+Stationarity Diagnostics
+(ADF, KPSS, differencing recommendations)
+            ↓
+Lag & Correlation Analysis
+(ACF, PACF, lag relationships, feature significance)
+            ↓
+Forecasting Readiness Assessment
+(Evaluate data suitability for predictive modeling)
+            ↓
+Model Recommendation Engine
+(ARIMA, SARIMA, Prophet, ETS, XGBoost, LSTM, etc.)
+            ↓
+Model Configuration Suggestions
+(Seasonality periods, lags, hyperparameters)
+            ↓
+Forecast Generation & Validation
+(Baseline forecasts and performance evaluation)
+            ↓
+Explainable Insights Generation
+(AI-generated interpretation of trends, risks, and opportunities)
+            ↓
+Automated EDA & Forecasting Report Creation
+(PDF/HTML/Dashboard with visualizations and findings)
+            ↓
+Interactive GenAI Q&A Assistant
+(Ask questions, receive insights, recommendations, and explanations)
