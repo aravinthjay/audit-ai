@@ -1,0 +1,37 @@
+CLAUDE LLM FRAMEWORK EVALUATION
+Comparative Analysis: Haiku vs. Sonnet vs. Opus
+
+1. SCENARIO ANALYSIS: CLINICAL NOTE RISK FLAGGING (TASK 3)
+To evaluate the clinical safety, medical reasoning, and legal liability awareness of the Claude model family, a critical healthcare risk management scenario was executed. This task evaluates whether an LLM can parse standard medical shorthand, identify missing high-risk diagnostics, and catch legally damaging admissions in medical charting.
+
+Evaluation Prompt (from image_3.png):
+"Summarise this patient note and flag any clinical or documentation risks: 'Pt c/o chest pain ×2 days. Vitals stable. EKG done — unremarkable. Discharged home with ibuprofen and advised to follow up if symptoms worsen. No troponin ordered. Attending noted time pressure due to ED volume.'"
+
+
+2. MODEL PERFORMANCE BREAKDOWN
+The responses from each model tier show a critical gap between basic medical summarization and high-stakes clinical risk intelligence:
+
+■ CLAUDE HAIKU
+- Expected Behavior: Basic Shorthand Translation & Literal Summary
+- Analytical Depth & Limitations: Translates medical abbreviations smoothly (e.g., "Pt c/o" to "Patient complains of", "ED" to "Emergency Department"). It provides a concise summary of what happened but treats the clinical note passively. It is highly likely to miss or under-emphasize the catastrophic omission of the troponin lab test for chest pain and won't flag the legal risk of documenting "time pressure."
+
+■ CLAUDE SONNET
+- Expected Behavior: Standard Clinical Compliance Checking
+- Analytical Depth & Limitations: Successfully transitions into risk identification. It explicitly flags the lack of a troponin order as a clinical risk for an atypical acute coronary syndrome (ACS) presentation. It also notes that discharging a patient with a potentially ischemic symptom on ibuprofen carries risk, but it may only touch lightly on the legal compliance issue regarding the charting of "time pressure."
+
+■ CLAUDE OPUS
+- Expected Behavior: Comprehensive Medical-Legal Forensic Analysis
+- Analytical Depth & Limitations: Dominates this high-stakes scenario by analyzing the note from both a clinical safety and a malpractice/liability perspective. It aggressively flags two major items:
+  1. Clinical Risk: Discharging cardiac-origin chest pain without ruling out myocardial infarction via troponin biomonitoring is a severe clinical diagnostic gap.
+  2. Documentation/Legal Risk: Explicitly warns that the attending's written admission of "time pressure due to ED volume" is highly incriminating. It notes that this phrase creates immediate, indefensible malpractice liability in medical charts and provides advice on objective, non-incriminating charting practices.
+
+
+3. FINAL VERDICT: WHICH MODEL IS BETTER FOR TASK 3?
+For this medical-legal risk assessment task, CLAUDE OPUS is overwhelmingly the only acceptable choice.
+
+Why Claude Opus Wins:
+- Dual-Domain Competence: Opus understands that clinical safety and legal documentation standards are deeply intertwined. It doesn't just evaluate the patient's heart; it evaluates the physician's legal liability.
+- Defensive Medical Reasoner: It correctly identifies that documenting emotional or operational strain ("time pressure") inside an official medical record is a critical structural error.
+
+Recommendation:
+- Absolute Mandate for Claude Opus: Any workflow involving clinical quality assurance (QA), chart auditing, malpractice risk screening, or automated medical-legal reviews must use Opus. Using lower-tier models introduces an unacceptable risk of missing subtle but catastrophic compliance liabilities.

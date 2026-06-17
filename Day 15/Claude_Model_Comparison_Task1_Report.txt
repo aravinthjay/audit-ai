@@ -1,0 +1,50 @@
+CLAUDE LLM FRAMEWORK EVALUATION
+Comparative Analysis: Haiku vs. Sonnet vs. Opus
+
+1. SCENARIO ANALYSIS: EARNINGS CALL INQUIRY
+To evaluate the nuanced differences between the three tiers of the Claude model family, a financial diagnostic benchmark was executed using a dense, multi-layered text evaluation prompt. This scenario tests an LLM's capacity to transcend surface-level syntax and execute structural business interrogation.
+
+Evaluation Prompt:
+"A tech company reports: Revenue up 12% YoY, but gross margins fell from 68% to 61%, operating expenses rose 31%, and the CFO mentioned 'investment in AI infrastructure.' The CEO said growth is 'on track.' Is this a healthy quarter? What should an analyst flag?"
+
+
+2. MODEL PERFORMANCE BREAKDOWN
+The responses from each model tier vary drastically based on their underlying parameter scale, contextual logic, and critical reasoning frameworks:
+
+■ CLAUDE HAIKU
+- Expected Behavior: Surface-Level Recitation
+- Analytical Depth & Limitations: Regurgitates the raw numbers provided in the prompt. It may synthesize the scenario into a baseline descriptor like "mixed performance," but fails to cross-examine management's strategic narrative or calculate forward-looking implications.
+
+■ CLAUDE SONNET
+- Expected Behavior: Core Macro Tension Identification
+- Analytical Depth & Limitations: Successfully identifies critical financial friction points: specifically, gross margin compression against positive top-line growth, and operating expenditure (Opex) expansion vastly outstripping revenue gains. It explicitly questions the CFO's "AI infrastructure" justification.
+
+■ CLAUDE OPUS
+- Expected Behavior: Deep Strategic Interrogation
+- Analytical Depth & Limitations: Goes beyond flagging trends to perform real structural inquiry. Dissects whether the Opex surge is permanent (structural) or temporary (one-time). Identifies the psychological disconnect between the CEO's optimistic tone and the hard fiscal contraction, and generates precise, targeted follow-up questions for management.
+
+
+3. STRATEGIC GUIDANCE: WHEN TO USE CLAUDE OPUS
+While lower-tier models excel at quick processing, automated routing, and basic summaries, Claude Opus is optimized for complex cognitive synthesis and high-stakes decision-making environments. Choose Opus when your workflows demand the following capabilities:
+
+1. Multi-Step Strategic & Qualitative Reasoning
+Opus should be selected when an answer cannot be formulated through simple pattern matching. This includes interpreting corporate sentiment, locating hidden discrepancies across legal disclosures, or balancing contradictory variables (e.g., strong macro revenue vs. structurally failing unit economics).
+
+2. High-Fidelity Professional Diagnostics
+- Financial Audits & Management Q&A: Formulating aggressive, highly targeted questions for corporate earnings, identifying balance sheet anomalies, and tracing subtle margin erosions.
+- Legal Contract Interrogation: Looking past standard boilerplates to identify asymmetric liabilities, hidden compliance risks, or conflicting terms across broad transaction sets.
+- Complex Technical Root-Cause Analysis: Simulating sophisticated failure modes across highly complex architectures where dependencies are non-linear.
+
+3. Advanced Synthesis and Counter-Framing
+Unlike standard models that display corporate or behavioral "sycophancy" (agreeing blindly with the prompt's tone), Opus is designed to actively challenge assumptions. As seen in the test scenario, it flags the divergence between operational realities and executive posturing—a foundational requirement for any rigorous, objective business analyst.
+
+
+4. FINAL VERDICT: WHICH MODEL IS BETTER FOR THIS SCENARIO?
+For this specific analytical task, CLAUDE OPUS is decisively the better model to choose. 
+
+Why Claude Opus Wins:
+- It actively resists corporate spin. While Haiku simply repeats what it is told and Sonnet merely notes the mathematical tension, Opus actively uncovers the psychological disconnect between executive optimism ("growth is on track") and financial reality (severe margin erosion and a 31% Opex spike).
+- It provides actionable, expert output. Instead of just flagging a trend, it delivers structural diagnostic tools—such as deep-dive management questions—that an equity analyst can immediately deploy in the real world.
+
+Recommendation:
+For any task involving financial forensic analysis, contract interrogation, or strategic auditing, Claude Opus should always be utilized over Sonnet and Haiku to ensure deep, adversarial critical thinking.
