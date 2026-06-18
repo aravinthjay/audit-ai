@@ -1,0 +1,20 @@
+The 1.10-second latency difference between the highest response time (2.03\text{ s}) and the lowest (0.93\text{ s}) in our RAG pipeline can be broken down into three major engineering factors:
+
+1. Token Generation Length (LLM Output)
+
+ The Principle: Large Language Models generate text sequentially, token by token. Latency scales linearly with the number of tokens the model outputs.
+
+ The Application: * In the 0.93s response, the model gave a very short, direct answer: "Apple's gross margin for fiscal 2023 was 44.1%..." * In the 2.03s response, the model had to synthesize multiple figures: "iPhone net sales were $200.6 billion... and Apple's total revenue was $383.3 billion..." The generation of these extra numbers and strings inherently takes more time.
+
+2. Context Window & Retrieval Payload Size
+
+ The Principle: The time it takes for an LLM to read and compute attention over its input context increases with the volume of text provided.
+
+ The Application: The query "What percentage of Apple's revenue came from iPhone in 2023?" likely forced the semantic search engine to retrieve multiple distinct chunks (one for iPhone sales, one for total revenue) to form an answer. Processing a larger context payload before generation causes a higher time-to-first-token (TTFT).
+
+3. Network and API Concurrency
+
+ The Principle: External API endpoints (like OpenAI or Gemini) experience varying queue times based on server load.
+
+ The Application: Minor network jitter combined with a slightly longer queue delay at the moment the 2.03s request was fired can easily compound the latency.
+
