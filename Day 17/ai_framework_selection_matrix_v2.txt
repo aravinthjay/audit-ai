@@ -1,0 +1,40 @@
+====================================================================================================
+                             AI MULTI-AGENT FRAMEWORK SELECTION MATRIX
+====================================================================================================
+
+[SCENARIO 1] The Understaffed Marketing Team
+----------------------------------------------------------------------------------------------------
+* Chosen Framework : Flowise
+* Target Type      : Prototype
+* Rationale        : The team has no engineering capacity and an urgent timeline. 
+                     Flowise provides a visual, drag-and-drop, low/no-code setup 
+                     that business teams can instantly build and tweak without writing code.
+
+
+[SCENARIO 2] The Research-Brief Assembly Line
+----------------------------------------------------------------------------------------------------
+* Chosen Framework : CrewAI
+* Target Type      : Production
+* Rationale        : The company has Python developers but doesn't want to code orchestration 
+                     plumbing. CrewAI fits perfectly because it is an opinionated, 
+                     role-based framework designed around explicit tasks and worker handoffs.
+
+
+[SCENARIO 3] The Self-Debugging Data Analyst
+----------------------------------------------------------------------------------------------------
+* Chosen Framework : AutoGen (Microsoft)
+* Target Type      : Prototype
+* Rationale        : Requires an unpredictable, open-ended back-and-forth conversational loop 
+                     between a "coder" and a "critic" agent, alongside automated execution loops 
+                     in a sandboxed coding environment.
+
+
+[SCENARIO 4] The Regulated Enterprise Platform
+----------------------------------------------------------------------------------------------------
+* Chosen Framework : LangChain + LangGraph
+* Target Type      : Production
+* Rationale        : Managed by a dedicated engineering team, this enterprise app requires 
+                     maximum customization, complex cyclic states, human-in-the-loop 
+                     approval gates, workflow checkpoints, and strict tracing for compliance.
+
+====================================================================================================
