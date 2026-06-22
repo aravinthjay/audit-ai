@@ -1,0 +1,62 @@
+APOLLO DIAGNOSTICS: AUTOMATED RADIOLOGY REPORT + CARE PATHWAY
+============================================================
+
+1. ARCHITECTURAL CHOICE: MULTI-AGENT SYSTEM
+-------------------------------------------
+Based on the case constraints, a Multi-Agent architecture is the correct choice due to:
+- 4 Distinct Domains: Requires separate specialist scopes (Radiology, Clinical Safety, EMR Logistics, Communication).
+- Sequential with Gates: Requires explicit failure isolation and validation checks between steps.
+- Different Tool Access: Limits tool blast radius (e.g., only the Scheduling Agent accesses the EMR API).
+
+
+2. TENTATIVE BLOCK DIAGRAM (TEXT-BASED)
+---------------------------------------
+
+    [ Raw Input: Chest CT Scan ]
+                 │
+                 ▼
+    ┌────────────────────────────────────────────────────────┐
+    │ 1. RADIOLOGY AGENT                                     │
+    │    - Tool Access: Medical Computer Vision / Vision-LLM  │
+    │    - Responsibility: Reads scan, drafts findings report│
+    └────────────────────────┬───────────────────────────────┘
+                             │
+                             ▼ (Drafted Report)
+    ┌────────────────────────────────────────────────────────┐
+    │ 2. CLINICAL DECISION-SUPPORT AGENT                     │
+    │    - Tool Access: Medication History DB & Medical RAG  │
+    │    - Responsibility: Cross-checks contraindications    │
+    └────────────────────────┬───────────────────────────────┘
+                             │
+                             ▼ (Safety Check Eval)
+                 [ VALIDATION SAFETY GATE ]
+                             │
+            ┌────────────────┴────────────────┐
+            │ Passed?                         │
+            ├── NO  ──> [ Flag for Human Review / Alert ]
+            └── YES ──> [ Verified Care Plan ]
+                             │
+                             ▼
+    ┌────────────────────────────────────────────────────────┐
+    │ 3. SCHEDULING AGENT                                    │
+    │    - Tool Access: Hospital EMR Scheduling API          │
+    │    - Responsibility: Books follow-ups (Biopsy/PET)     │
+    └────────────────────────┬───────────────────────────────┘
+                             │
+                             ▼ (Booking Confirmation)
+    ┌────────────────────────────────────────────────────────┐
+    │ 4. COMMUNICATION AGENT                                 │
+    │    - Tool Access: Generative Text Synthesis Engine     │
+    │    - Responsibility: Drafts GP letter & Patient summary│
+    └────────────────────────┬───────────────────────────────┘
+                             │
+                             ▼
+    [ Final Deliverables: GP Letter, Patient Summary, Scheduled Appointment ]
+
+
+3. PIPELINE STAGE BREAKDOWN
+---------------------------
+- Stage 1: Focuses on visual pattern recognition and clinical finding extraction.
+- Stage 2: Operates as a logical safety filter mapping findings against history.
+- Stage 3: Executes structured transactional operations with the external EMR system.
+- Stage 4: Handles personalization, empathy framing, and translation of complex jargon into layman terms.

@@ -1,0 +1,67 @@
+CLOUDOPS SENTINEL: INCIDENT TRIAGE AND AUTO-REMEDIATION
+======================================================
+
+1. ARCHITECTURAL CHOICE: MULTI-AGENT SYSTEM
+-------------------------------------------
+Based on the case constraints, a Multi-Agent architecture is the correct choice due to:
+- Concurrent Sub-Investigations: Steps (a), (b), and (c) are independent operations that need to run in parallel to minimize MTTR (Mean Time To Resolution).
+- Different Tool Surfaces: Interacting with Datadog metrics, GitHub Actions deployment logs, and AWS RDS databases requires highly distinct tool context parsing and permission management.
+- Human-in-the-Loop Gate: Employs a conditional safety gate based on a confidence score threshold (< 80%), routing tasks dynamically between automation and human approval.
+
+
+2. VALID MERMAID.JS BLOCK DIAGRAM
+---------------------------------
+Copy and paste this section directly into any Mermaid viewer (e.g., mermaid.live):
+
+```mermaid
+graph TD
+    %% Define Styles
+    classDef triggerStyle fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef agentStyle fill:#dae8fc,stroke:#6c8ebf,stroke-width:1px;
+    classDef gateStyle fill:#fff2cc,stroke:#d6b656,stroke-width:2px;
+    classDef actionStyle fill:#d5e8d4,stroke:#82b366,stroke-width:1px;
+    classDef failStyle fill:#f8cecc,stroke:#b85450,stroke-width:1px;
+
+    %% Workflow Nodes
+    Trigger([Alert Fires: p99 Latency Spiked to 4.2s]) :::triggerStyle
+
+    subgraph Parallel_Triage_Layer [Concurrent Sub-Investigations]
+        AgentA[Agent A: Datadog Triage Specialist<br>Task: Query pod metrics] :::agentStyle
+        AgentB[Agent B: Release/CI Specialist<br>Task: Check GitHub Actions logs] :::agentStyle
+        AgentC[Agent C: Database Specialist<br>Task: Query AWS RDS slow logs] :::agentStyle
+    end
+
+    RemediationAgent[Orchestrator / Remediation Agent<br>Task: Compile findings & weigh confidence] :::agentStyle
+
+    Gate{"Confidence Level Check"} :::gateStyle
+    HumanApproval[Human Approval Required<br>Pause Pipeline for Operator Review] :::failStyle
+    ExecuteAction[Step d: Auto-Remediation<br>Tool: kubectl rollback / pod restart] :::actionStyle
+
+    SlackAgent[Step e: Communication Agent<br>Tool: Slack API] :::agentStyle
+    Output([Final Output: Post structured RCA to #incidents]) :::triggerStyle
+
+    %% System Connections
+    Trigger --> AgentA
+    Trigger --> AgentB
+    Trigger --> AgentC
+
+    AgentA -- "Pod Health Data" --> RemediationAgent
+    AgentB -- "Recent Deploy State" --> RemediationAgent
+    AgentC -- "DB Bottleneck Data" --> RemediationAgent
+
+    RemediationAgent --> Gate
+    Gate -- "< 80% Confidence" --> HumanApproval
+    HumanApproval -- "Approved by Admin" --> ExecuteAction
+    Gate -- ">= 80% Confidence" --> ExecuteAction
+
+    ExecuteAction -- "Remediation Status" --> SlackAgent
+    SlackAgent --> Output
+```
+
+
+3. PIPELINE STAGE BREAKDOWN
+---------------------------
+- Stage 1 (Parallel Diagnostics): Independent specialized monitor agents target distinct infrastructure components simultaneously.
+- Stage 2 (Triage Orchestration): An analyst agent centralizes findings to build a root cause timeline and compute remediation risk.
+- Stage 3 (Action & Safety Gate): Protects system uptime using an automation boundary gate before safely changing live state.
+- Stage 4 (Incident Post-Mortem): Formats execution logs into an engineering-friendly Root Cause Analysis summary for the Slack team.

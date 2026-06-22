@@ -1,0 +1,53 @@
+SHOPIQ: PERSONALISED PRODUCT RECOMMENDATION EMAIL
+=================================================
+
+1. ARCHITECTURAL CHOICE: SINGLE AGENT
+-------------------------------------
+Based on the case constraints, a Single Agent architecture is the optimal choice due to:
+- Shared User Context: The entire pipeline (fetching history, candidate generation, applying business rules, copywriting, and HTML assembly) relies on a single, unified user context object. Passing this seamlessly within a single execution scope avoids the serialization overhead of multi-agent handoffs.
+- Strict Latency SLA (< 3s per user): A tight time window leaves no room for the communication, routing, and consensus coordination overhead intrinsic to multi-agent frameworks.
+- Linear Batch Pipeline: The tasks follow a highly predictable, step-by-step linear flow suited for a deterministic execution pipeline or single routed agent rather than a dynamic team.
+
+
+2. TENTATIVE BLOCK DIAGRAM (TEXT-BASED)
+---------------------------------------
+
+    [ Nightly Trigger: 4M Users Batch Job ]
+                       │
+                       ▼
+    ┌────────────────────────────────────────────────────────┐
+    │ SINGLE AGENT RUNTIME ENVELOPE                          │
+    │ (Maintains Unified Context Object throughout execution)│
+    │                                                        │
+    │  Step 1: Context Retrieval                             │
+    │          - Pulls 6-month purchase & browse history     │
+    │              │                                         │
+    │              ▼                                         │
+    │  Step 2: Candidate Recommendation Engine               │
+    │          - Runs collaborative-filtering model          │
+    │          - Generates top-10 candidates                 │
+    │              │                                         │
+    │              ▼                                         │
+    │  Step 3: Business Logic Filtering                      │
+    │          - Rule: Exclude out-of-stock items            │
+    │          - Rule: Exclude recently-purchased items      │
+    │              │                                         │
+    │              ▼                                         │
+    │  Step 4: LLM Copywriting Module                        │
+    │          - Generates short personalized intro paragraph│
+    │              │                                         │
+    │              ▼                                         │
+    │  Step 5: Code / Generation Assembly                    │
+    │          - Compiles final email HTML                   │
+    └──────────────────────┬─────────────────────────────────┘
+                           │
+                           ▼ (Execution time: < 3 seconds)
+            [ Final Output: Formatted Email HTML ]
+
+
+3. PIPELINE STAGE BREAKDOWN
+---------------------------
+- Stage 1 & 2 (Data Fetch & Recs): Traditional, fast database queries and embedding lookups that hydrate the user context.
+- Stage 3 (Deterministic Logic): Standard hard-coded if/then business constraints filtering the top-10 list.
+- Stage 4 (Generative Copywriting): A fast, highly-focused LLM call using the context to write a tailored intro snippet.
+- Stage 5 (Assembly): A template rendering step combining the intro text and recommended product modules into HTML.

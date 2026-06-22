@@ -1,0 +1,66 @@
+CONTRACTIQ: M&A DUE DILIGENCE ON 800 CONTRACTS
+================================================
+
+1. ARCHITECTURAL CHOICE: MULTI-AGENT SYSTEM
+-------------------------------------------
+Based on the case constraints, a Multi-Agent architecture is the correct choice due to:
+- Distinct Separation of Stages: The workflow transitions from high-volume parallel independent tasks (data extraction) to highly interconnected, global synthesis (identifying cascading cross-contract risks).
+- Inter-contract Dependencies: A single agent cannot efficiently cross-reference and track deep systemic connections (like cascading change-of-control clauses) across 800 documents without experiencing catastrophic context overflow or hallucination.
+- Specialized Capabilities Needed: The workload requires independent legal extraction "workers" feeding data into a specialized "Synthesizer/Risk Profiler" agent capable of evaluating macro regulatory compliance and assembling a dynamic RAG / Heat Map summary.
+
+
+2. TENTATIVE BLOCK DIAGRAM (TEXT-BASED)
+---------------------------------------
+
+    [ Input: 800 Raw Supplier & Employment Contracts ]
+                          │
+                          ▼
+    ┌────────────────────────────────────────────────────────┐
+    │ STAGE 1: PARALLEL EXTRACTION LAYER                     │
+    │ (Independent Document Processing - Highly Parallel)    │
+    │                                                        │
+    │  [Contract 1] ──>  [Extraction Agent A] ───┐            │
+    │  [Contract 2] ──>  [Extraction Agent B] ───┼──> (JSON) │
+    │       :                                    │           │
+    │  [Contract N] ──>  [Extraction Agent N] ───┘           │
+    │                                                        │
+    │  - Task: Extract key obligations & risk clauses        │
+    └──────────────────────┬─────────────────────────────────┘
+                           │
+                           ▼ (Structured Extraction Payloads)
+    ┌────────────────────────────────────────────────────────┐
+    │ STAGE 2: CROSS-DOCUMENT SYNTHESIS & EVALUATION LAYER   │
+    │                                                        │
+    │  ┌──────────────────────────────────────────────────┐  │
+    │  │ 2a. REGULATORY CHECKLIST AGENT                   │  │
+    │  │     - Tool: Jurisdiction-Specific Rules Engine   │  │
+    │  │     - Task: Validates clauses against regulatory │  │
+    │  │             compliance baselines.                │  │
+    │  └────────────────────────┬─────────────────────────┘  │
+    │                           │ (Compliance Metadata)      │
+    │                           ▼                            │
+    │  ┌──────────────────────────────────────────────────┐  │
+    │  │ 2b. DEPENDENCY MAPPING AGENT                     │  │
+    │  │     - Tool: Graph Database / Relational Mapping  │  │
+    │  │     - Task: Identifies cascading cross-contract  │  │
+    │  │             dependencies (e.g. change-of-control)│  │
+    │  └────────────────────────┬─────────────────────────┘  │
+    └───────────────────────────┼────────────────────────────┘
+                                │
+                                ▼ (Synthesized Risk Metrics)
+    ┌────────────────────────────────────────────────────────┐
+    │ STAGE 3: EXECUTIVE REPORTING AGENT                     │
+    │ - Tool Access: Data Visualization / Charting Library   │
+    │ - Responsibility: Generates Executive Risk Summary and │
+    │                   compiles the Red/Amber/Green heat map│
+    └────────────────────────┬───────────────────────────────┘
+                             │
+                             ▼ (Completed within < 4 Hours)
+        [ Final Output: Executive Risk Summary & Heat Map ]
+
+
+3. PIPELINE STAGE BREAKDOWN
+---------------------------
+- Stage 1 (Extraction Workers): Swarm of fast, narrow-prompted agents running in parallel to maximize throughput and meet the 4-hour SLA.
+- Stage 2 (Synthesis Experts): Specialized analytical agents that evaluate the *collective* body of structured data rather than text. 
+- Stage 3 (Visual Summary): Aggregates the risk graph and compliance gaps into the definitive legal deliverable.
