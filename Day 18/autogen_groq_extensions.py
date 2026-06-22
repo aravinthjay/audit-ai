@@ -186,9 +186,9 @@ async def main():
         content = getattr(message, "content", str(message))
 
         labels = {
-            "Researcher":    "🔵 [Researcher — using tools]",
-            "HumanReviewer": "🟡 [YOU — Human Reviewer]",
-            "Editor":        "🟢 [Editor — final polish]",
+            "Researcher":    " [Researcher — using tools]",
+            "HumanReviewer": " [YOU — Human Reviewer]",
+            "Editor":        " [Editor — final polish]",
         }
         label = labels.get(source, f"[{source}]")
         print(f"\n\033[1m{label}\033[0m")
