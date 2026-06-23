@@ -1,0 +1,35 @@
+Scenario 3 of 8 – Editorial Workflow
+
+Correct Pattern: GraphFlow
+
+Reason:
+A newsroom drafts a short article with a fixed three-stage loop:
+1. Writer drafts
+2. Editor critiques
+3. Writer revises
+
+The same roles execute in the same order repeatedly until the editor approves the article.
+
+Why GraphFlow?
+- Fixed sequence of agents
+- Predefined workflow
+- Conditional looping until approval
+- Deterministic process
+
+Why not the others?
+- Round-robin: Cycles through agents but does not naturally model approval-based workflow.
+- Selector: Used when a controller dynamically chooses the next agent.
+- Swarm/Handoff: Agents decide who takes over next.
+- Magentic: Designed for more dynamic collaborative interactions.
+
+Workflow:
+
+Writer
+   ↓
+Editor
+   ↓
+Approved?
+ ├─ Yes → End
+ └─ No  → Writer (revise)
+
+Answer: GraphFlow

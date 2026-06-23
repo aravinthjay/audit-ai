@@ -1,0 +1,47 @@
+Scenario 7 of 8 – Buyer's Research Assistant
+
+Correct Pattern: Selector
+
+
+
+Reason:
+A merchandising team asks:
+"Find three trending materials for outdoor furniture this season and summarize supplier options."
+
+The number and type of subtasks are not known in advance and may require:
+- Web searches
+- Supplier lookups
+- Market trend analysis
+- Data gathering from multiple sources
+
+Why Selector?
+- A central coordinator decides which specialist agent should be used next.
+- The workflow is dynamic, but task routing remains controlled.
+- Different agents can be selected depending on what information is needed.
+- The final response is assembled from the outputs of the selected specialists.
+
+Why not the others?
+- Round-robin: Unnecessary fixed rotation.
+- GraphFlow: The exact workflow is not known beforehand.
+- Swarm / Handoff: Could work, but agents do not need to autonomously transfer control.
+- Magentic: Collaboration is possible, but explicit task selection is the primary need.
+
+Example Flow:
+
+User Request
+      ↓
+Selector Agent
+      ↓
+Trend Research Agent
+      ↓
+Supplier Lookup Agent
+      ↓
+Market Analysis Agent
+      ↓
+Final Summary
+
+Why this is a Close Call:
+Swarm / Handoff is a strong runner-up because the investigation may evolve as new findings emerge. However, the scenario is best modeled by a coordinator choosing the most appropriate specialist at each step rather than agents handing off control themselves.
+
+Answer: Selector
+Runner-up: Swarm / Handoff

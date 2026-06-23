@@ -1,0 +1,104 @@
+Scenario 8 of 8 – RFP Response Builder
+
+Correct Pattern: GraphFlow
+
+
+Scenario:
+A bid response has four sections:
+- Technical
+- Pricing
+- Compliance
+- Timeline
+
+Each section is owned by a specialist and assembled in order.
+A reviewer then checks the assembled draft and may send specific sections
+back for rework before final sign-off.
+
+Why GraphFlow?
+
+This workflow is structured, predictable, and contains explicit review loops.
+
+Key characteristics:
+1. Known sequence of work.
+2. Multiple specialist agents responsible for predefined sections.
+3. Assembly step combines all sections.
+4. Reviewer performs quality checks.
+5. Conditional routing sends specific sections back for rework.
+6. Final approval ends the workflow.
+
+GraphFlow is designed for:
+- Deterministic workflows
+- Conditional branches
+- Review and approval loops
+- Structured orchestration between agents
+
+Why not the others?
+
+Round-robin:
+- Merely cycles through agents.
+- Does not naturally support targeted rework loops.
+
+Selector:
+- Useful when choosing the next agent dynamically.
+- Here the workflow is already known.
+
+Swarm / Handoff:
+- Best when agents decide who should act next.
+- This process follows a predefined structure.
+
+Magentic:
+- Strong runner-up because specialists collaborate on a shared document.
+- However, the overall process is governed by a fixed workflow, making GraphFlow the better fit.
+
+Design Diagram
+
+Start
+  |
+  v
++-----------+
+| Technical |
++-----------+
+      |
+      v
++-----------+
+|  Pricing  |
++-----------+
+      |
+      v
++-----------+
+| Compliance|
++-----------+
+      |
+      v
++-----------+
+| Timeline  |
++-----------+
+      |
+      v
++----------------+
+| Assemble Draft |
++----------------+
+      |
+      v
++----------+
+| Reviewer |
++----------+
+      |
+      v
+ Approved?
+   /    \
+ Yes    No
+  |      |
+  |      v
+  |  Rework
+  | (specific
+  |  section)
+  |      |
+  +------+
+      |
+      v
+ Final Sign-off
+
+Answer: GraphFlow
+
+Runner-up: Magentic

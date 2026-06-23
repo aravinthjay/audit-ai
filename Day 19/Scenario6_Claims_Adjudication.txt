@@ -1,0 +1,47 @@
+Scenario 6 of 8 – Claims Adjudication
+
+Correct Pattern: GraphFlow
+
+
+Reason:
+A claim requires three independent checks:
+1. Fraud screening
+2. Policy coverage verification
+3. Medical coding review
+
+These checks can run in parallel. A final decision agent then combines the results and determines whether to approve or deny the claim.
+
+Why GraphFlow?
+- Predefined workflow
+- Parallel execution branches
+- Synchronization of results
+- Final aggregation and decision step
+- Deterministic process with known stages
+
+Why not the others?
+- Round-robin: Not a sequential agent conversation.
+- Selector: All three checks are required, so selecting one agent at a time is unnecessary.
+- Swarm / Handoff: No dynamic routing is needed because the workflow is known in advance.
+- Magentic: Collaboration is possible, but GraphFlow better represents structured orchestration.
+
+Example Workflow:
+
+Claim Submitted
+       │
+ ┌─────┼─────┐
+ │     │     │
+ ▼     ▼     ▼
+Fraud Policy Medical
+Check Coverage Coding
+ │     │     │
+ └─────┼─────┘
+       ▼
+Decision Agent
+       ▼
+Approve / Deny
+
+Why this is a Close Call:
+Magentic is a reasonable runner-up because multiple specialists contribute information that is later synthesized. However, the workflow itself is fixed and structured, making GraphFlow the stronger choice.
+
+Answer: GraphFlow
+Runner-up: Magentic

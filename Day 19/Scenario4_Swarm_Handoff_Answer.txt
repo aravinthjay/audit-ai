@@ -1,0 +1,43 @@
+Scenario 4 of 8 – Security Incident Investigation
+
+Correct Pattern: Swarm / Handoff
+
+Reason:
+When an alert fires, the assistant must investigate an unknown situation by:
+- Pulling logs
+- Running queries
+- Reading configuration files
+- Looking up relevant CVEs
+- Deciding the next action based on findings
+
+The investigation path is not known in advance and evolves dynamically as new evidence is discovered.
+
+Why Swarm / Handoff?
+- No predefined workflow
+- Next step depends on findings
+- Specialized agents can take over when needed
+- Dynamic transfer of control between agents
+
+Why not the others?
+- Round-robin: Assumes a fixed sequence of participation.
+- Selector: Requires a central controller to choose every next step.
+- GraphFlow: Best for predefined workflows and deterministic paths.
+- Magentic: Supports collaboration, but handoff between specialists is the key requirement here.
+
+Example Flow:
+
+Incident Alert
+      ↓
+Log Analysis Agent
+      ↓
+Suspicious Activity Found?
+      ↓
+Vulnerability Research Agent
+      ↓
+Configuration Review Agent
+      ↓
+Threat Assessment Agent
+      ↓
+Resolution
+
+Answer: Swarm / Handoff
