@@ -1,0 +1,449 @@
+================================================================================
+   CASE STUDY: MCP-CENTRIC MULTI-SERVER ARCHITECTURE
+   Split Across Seller-Controlled Boundary (SP-API + Cost Data)
+   and Amazon's Boundary (Official Ads MCP Server)
+================================================================================
+
+
+================================================================================
+SECTION 1: ARCHITECTURAL PREMISE
+================================================================================
+
+The system is composed of two distinct trust domains connected through a shared
+MCP orchestration layer:
+
+    DOMAIN A  --  Seller-Controlled Boundary
+      - Amazon SP-API (Selling Partner API) wrapper MCP server
+      - Seller's internal cost/margin data MCP server
+      - Owned, operated, and credentialed by the seller
+
+    DOMAIN B  --  Amazon-Controlled Boundary
+      - Amazon's official Ads MCP Server (Amazon-hosted)
+      - Credentials issued by Amazon to the seller
+      - Policy and rate-limits enforced by Amazon
+
+    ORCHESTRATION LAYER  --  Claude / AI Agent
+      - Routes tool calls across both domains
+      - Enforces the gate rule: reads autonomous, money/PII writes gated
+      - Holds no long-lived secrets; uses scoped tokens per session
+
+
+================================================================================
+SECTION 2: DESIGN DECISIONS BY DOMAIN
+================================================================================
+
+--------------------------------------------------------------------------------
+2.1  DISCOVERY
+--------------------------------------------------------------------------------
+
+  DOMAIN A (Seller MCP Servers)
+  +--------------------------------------------------------------------------+
+  | - Static registration: server URLs and capability manifests are declared |
+  |   in a seller-controlled config file (e.g., mcp_registry.yaml).          |
+  |                                                                          |
+  | - Tool manifests are fetched at agent startup via a lightweight          |
+  |   /mcp/tools endpoint exposed on each MCP server.                        |
+  |                                                                          |
+  | - SP-API wrapper exposes a curated tool surface -- not every SP-API      |
+  |   endpoint, only the ones relevant to the seller's workflows             |
+  |   (e.g., getOrders, getInventory, getListingDetails).                    |
+  |                                                                          |
+  | - Cost data server exposes a narrow schema: getCOGS, getMargin,          |
+  |   getTargetACoS. No raw DB access.                                       |
+  +--------------------------------------------------------------------------+
+
+  DOMAIN B (Amazon Ads MCP Server)
+  +--------------------------------------------------------------------------+
+  | - Discovery is dynamic: agent fetches the tool manifest from Amazon's    |
+  |   well-known MCP endpoint at session initialization.                     |
+  |                                                                          |
+  | - Amazon controls the canonical tool list; seller cannot modify it.      |
+  |                                                                          |
+  | - Tool versioning handled by Amazon -- agent must tolerate additions/    |
+  |   removals gracefully (fail-open for reads, fail-closed for writes).     |
+  +--------------------------------------------------------------------------+
+
+  DESIGN DECISION: Two-phase discovery
+    Phase 1  -->  load Seller servers (static, deterministic)
+    Phase 2  -->  load Amazon Ads server (dynamic, version-tolerant)
+    Combined tool namespace is flattened with a domain prefix:
+      seller:sp_api.*     seller:cost.*     amazon:ads.*
+
+
+--------------------------------------------------------------------------------
+2.2  AUTHORIZATION
+--------------------------------------------------------------------------------
+
+  DOMAIN A (Seller MCP Servers)
+  +--------------------------------------------------------------------------+
+  | - SP-API: OAuth 2.0 with LWA (Login with Amazon). Seller stores a        |
+  |   refresh token in a secrets manager (AWS Secrets Manager / Vault).      |
+  |   The MCP wrapper exchanges it for short-lived access tokens on demand.  |
+  |                                                                          |
+  | - Cost data server: mTLS between agent orchestrator and server.          |
+  |   Certificate issued by seller's internal CA. Scoped to read-only        |
+  |   by default; write scope requires an additional claim in the cert.      |
+  |                                                                          |
+  | - Agent never sees raw credentials -- only token handles or signed       |
+  |   request objects passed through the MCP boundary.                       |
+  +--------------------------------------------------------------------------+
+
+  DOMAIN B (Amazon Ads MCP Server)
+  +--------------------------------------------------------------------------+
+  | - OAuth 2.0 with LWA, same pattern as SP-API but a distinct client_id.   |
+  |                                                                          |
+  | - Token is scoped to Advertising API only; separate from SP-API token.   |
+  |                                                                          |
+  | - Amazon enforces its own authorization server-side; agent relies on     |
+  |   error responses (403/401) to detect over-permission calls.             |
+  |                                                                          |
+  | - Budget-touching and bid-modifying calls require an additional one-time |
+  |   confirmation token generated by the HITL gate (see Section 2.5).       |
+  +--------------------------------------------------------------------------+
+
+  DESIGN DECISION: Principle of Least Privilege per domain
+    - Read tokens  : long-lived (refresh every 60 min), broad read scope
+    - Write tokens : short-lived (single-use or 5 min TTL), narrow scope
+    - PII calls    : require explicit human confirmation even if read-only
+
+
+--------------------------------------------------------------------------------
+2.3  TOOL NAMESPACING AND ROUTING
+--------------------------------------------------------------------------------
+
+  Problem: Two domains with potentially overlapping tool names (e.g., both
+  could have a "getCampaigns" concept).
+
+  Solution: Domain-prefixed namespacing enforced by the orchestrator.
+
+  +--------------------------------------------------------------------------+
+  | seller:sp_api.getOrders     -->  routes to SP-API MCP wrapper            |
+  | seller:cost.getMargin       -->  routes to cost data MCP server          |
+  | amazon:ads.getCampaigns     -->  routes to Amazon Ads MCP server         |
+  | amazon:ads.updateBudget     -->  gated route (see Section 2.5)           |
+  +--------------------------------------------------------------------------+
+
+  Orchestrator routing table:
+  +--------------------------------------------------------------------------+
+  | Domain            Base URL                          Auth Scheme          |
+  | -----------------------------------------------------------------------  |
+  | seller:sp_api     https://sp-mcp.seller.internal    lwa_oauth            |
+  | seller:cost       https://cost-mcp.seller.internal  mtls                 |
+  | amazon:ads        https://ads-mcp.amazon.com        lwa_oauth            |
+  +--------------------------------------------------------------------------+
+
+  DESIGN DECISION: Orchestrator owns the routing table; individual MCP
+  servers are unaware of each other. Cross-domain data joins happen only
+  inside the agent's reasoning layer, never via server-to-server calls.
+
+
+--------------------------------------------------------------------------------
+2.4  READ AUTONOMY vs. WRITE GATING
+--------------------------------------------------------------------------------
+
+  Core Rule:
+    READ operations                      -->  agent executes autonomously
+    WRITE operations (money or PII)      -->  gated, require human approval
+
+  Tool Classification Table:
+  +-----------------------------+-----------+-------+-----------------------+
+  | Tool                        | Class     | Gate? | Reason                |
+  +-----------------------------+-----------+-------+-----------------------+
+  | sp_api.getOrders            | READ      | NO    | Order history pull    |
+  | sp_api.getInventory         | READ      | NO    | Stock levels          |
+  | sp_api.getListingDetails    | READ      | NO    | ASIN metadata         |
+  | cost.getMargin              | READ      | NO    | Internal cost data    |
+  | cost.getCOGS                | READ      | NO    | Internal cost data    |
+  | ads.getCampaigns            | READ      | NO    | Campaign structure    |
+  | ads.getKeywordBids          | READ      | NO    | Current bid state     |
+  | ads.getReports              | READ      | NO    | Performance data      |
+  +-----------------------------+-----------+-------+-----------------------+
+  | ads.updateBudget            | WRITE $   | YES   | Touches spend cap     |
+  | ads.updateBid               | WRITE $   | YES   | Affects ad spend      |
+  | ads.createCampaign          | WRITE $   | YES   | New spend commitment  |
+  | ads.pauseCampaign           | WRITE $   | YES * | Revenue impact        |
+  | sp_api.updatePrice          | WRITE $   | YES   | Revenue impact        |
+  | sp_api.getCustomerAddress   | READ PII  | YES   | PII even if read-only |
+  | sp_api.createRefund         | WRITE $   | YES   | Financial transaction |
+  | cost.updateCOGS             | WRITE     | YES   | Data integrity risk   |
+  +-----------------------------+-----------+-------+-----------------------+
+  * pauseCampaign may bypass gate in emergency if ACoS exceeds hard limit.
+
+  DESIGN DECISION: Emergency bypass
+    A configurable hard-limit rule (e.g., ACoS > 300% for 15 min) allows
+    the agent to call ads.pauseCampaign without the human gate. All such
+    actions are logged with a BYPASS flag and seller is alerted within 60s.
+
+
+--------------------------------------------------------------------------------
+2.5  HUMAN-IN-THE-LOOP (HITL) GATE
+--------------------------------------------------------------------------------
+
+  Gate flow for gated writes:
+  +--------------------------------------------------------------------------+
+  | Step 1  Agent identifies a gated tool call.                              |
+  |                                                                          |
+  | Step 2  Agent generates a structured approval request:                   |
+  |           { tool, params, rationale, estimated_impact, expires_in:300s } |
+  |                                                                          |
+  | Step 3  Request surfaced to seller via UI (web / mobile / Slack bot).    |
+  |                                                                          |
+  | Step 4  Seller approves or rejects within TTL:                           |
+  |           Approve  -->  agent receives a one-time confirmation token     |
+  |           Reject   -->  agent records rejection, does NOT retry          |
+  |           Timeout  -->  treated as rejection                             |
+  |                                                                          |
+  | Step 5  Agent attaches confirmation token to the MCP call.               |
+  |                                                                          |
+  | Step 6  Write is executed; result logged to immutable audit trail.       |
+  +--------------------------------------------------------------------------+
+
+  Batching: Up to 5 related gated calls may be bundled into one approval
+  request to reduce friction (e.g., bid updates across a campaign). Each
+  call still receives its own confirmation token.
+
+  DESIGN DECISION: Confirmation token is domain-specific
+    - For Domain A (seller:cost writes): token is HMAC-signed, shared
+      between orchestrator and the MCP server.
+    - For Domain B (Amazon Ads writes): confirmation is recorded in the
+      orchestrator's audit log. Amazon's server does not receive the token
+      itself -- it has its own auth. The token is internal proof that a
+      human approved the call before it was forwarded.
+
+
+--------------------------------------------------------------------------------
+2.6  DATA RESIDENCY AND PII HANDLING
+--------------------------------------------------------------------------------
+
+  +--------------------------------------------------------------------------+
+  | - PII (customer names, addresses, order details) stays within Domain A   |
+  |   and is never forwarded to Domain B or to the agent's long-term memory. |
+  |                                                                          |
+  | - SP-API MCP wrapper applies a PII stripping filter: returns masked      |
+  |   versions of PII fields unless caller presents a PII-scoped token       |
+  |   (which requires gate approval).                                        |
+  |                                                                          |
+  | - Agent working memory (context window) is ephemeral -- PII loaded for   |
+  |   a task is not persisted to any external store after the session.       |
+  |                                                                          |
+  | - GDPR / data residency: cost data server stores data in seller's        |
+  |   preferred region. SP-API data is Amazon-hosted; seller acknowledges    |
+  |   this in the Amazon data processing addendum.                           |
+  +--------------------------------------------------------------------------+
+
+
+--------------------------------------------------------------------------------
+2.7  ERROR HANDLING AND FALLBACK
+--------------------------------------------------------------------------------
+
+  +----------------------+----------------------------------------------------+
+  | Error Class          | Behavior                                           |
+  +----------------------+----------------------------------------------------+
+  | Domain A server down | Fail with informative message; queue reads for     |
+  |                      | retry; block all dependent writes                  |
+  +----------------------+----------------------------------------------------+
+  | Domain B server down | Same as above; do not degrade Domain A reads       |
+  +----------------------+----------------------------------------------------+
+  | Token expired        | Silent refresh (reads); re-gate before write       |
+  +----------------------+----------------------------------------------------+
+  | Rate limit (429)     | Exponential backoff with jitter, max 3 retries     |
+  +----------------------+----------------------------------------------------+
+  | Gate timeout         | Treat as rejection; log; surface to seller         |
+  +----------------------+----------------------------------------------------+
+  | Partial write fail   | Compensating rollback where supported; otherwise   |
+  |                      | flag as NEEDS_REVIEW in audit log                  |
+  +----------------------+----------------------------------------------------+
+  | Cross-domain join    | Return partial result; label which domain failed   |
+  | fail                 |                                                    |
+  +----------------------+----------------------------------------------------+
+
+  DESIGN DECISION: Domain independence
+    Domain A and Domain B failures are strictly isolated. A Domain B outage
+    (Amazon Ads server) must never prevent reading SP-API inventory or cost
+    data. The routing layer enforces this isolation explicitly.
+
+
+--------------------------------------------------------------------------------
+2.8  AUDIT AND OBSERVABILITY
+--------------------------------------------------------------------------------
+
+  Every tool call is logged with:
+  +--------------------------------------------------------------------------+
+  | - timestamp (UTC)                                                        |
+  | - domain + tool name                                                     |
+  | - call classification    (READ / WRITE / WRITE_PII)                      |
+  | - gate outcome           (AUTONOMOUS / APPROVED / REJECTED / BYPASS)     |
+  | - sanitized params       (PII fields replaced with [REDACTED])           |
+  | - response status + latency                                              |
+  | - session ID             (links the full reasoning chain)                |
+  +--------------------------------------------------------------------------+
+
+  Audit log is append-only, stored in seller-controlled storage
+  (e.g., S3 with object lock or Azure Immutable Blob Storage).
+
+  Metrics surfaced to seller dashboard:
+  +--------------------------------------------------------------------------+
+  | - Daily write gate approval / rejection rate                             |
+  | - Spend delta attributed to agent-initiated changes                      |
+  | - Error rate per domain                                                  |
+  | - Emergency bypass count                                                 |
+  +--------------------------------------------------------------------------+
+
+
+================================================================================
+SECTION 3: BLOCK DIAGRAM
+================================================================================
+
+ +-----------------------------------------------------------------------------+
+ |                        SELLER INTERFACE LAYER                               |
+ |        [ Web UI  /  Slack Bot  /  API Client ]                              |
+ |              ^                         |                                    |
+ |              | Gate Approvals/Alerts   | Natural Language Query / Task      |
+ +--------------|-------------------------|------------------------------------|+
+                |                         v
+ +-----------------------------------------------------------------------------|+
+ |                        AI AGENT / ORCHESTRATOR                              |
+ |                                                                             |
+ |   +--------------------+   +-------------------+   +-------------------+  |
+ |   |   Tool Dispatcher  |   |   Gate Enforcer   |   |  Reasoning Engine |  |
+ |   |  (routing table)   |   |  (read/write/PII) |   |  (Claude / LLM)   |  |
+ |   +--------------------+   +-------------------+   +-------------------+  |
+ |                                      |                                     |
+ |                             +--------+---------+                           |
+ |                             |   HITL GATE      |                           |
+ |                             | (async, TTL=300s)|                           |
+ |                             | generates token  |                           |
+ |                             +------------------+                           |
+ +-----------------------------------------------------------------------------+
+                                       |
+              +------------------------+------------------------+
+              |     MCP TRANSPORT LAYER  (HTTPS + JSON-RPC)    |
+              |       Domain prefix routing: seller:* / amazon:*|
+              +------------------------+------------------------+
+                                       |
+              +------------------------+------------------------+
+              |                                                 |
+   ===========|=================         ======================|==============
+   DOMAIN A   |  SELLER-CONTROLLED       DOMAIN B  AMAZON-CONTROLLED
+   ===========|=================         ======================|==============
+              |                                                 |
+   +----------+----------+    +-----------+       +------------+------------+
+   | SP-API MCP WRAPPER  |    | COST DATA |       | AMAZON ADS MCP SERVER   |
+   | (seller-hosted)     |    |    MCP    |       | (Amazon-hosted)         |
+   |                     |    |  SERVER   |       |                         |
+   | Tools:              |    |(seller-   |       | Tools:                  |
+   |  getOrders      [R] |    | hosted,   |       |  getCampaigns       [R] |
+   |  getInventory   [R] |    | mTLS)     |       |  getKeywordBids     [R] |
+   |  getListing     [R] |    |           |       |  getReports         [R] |
+   |  getCustomer*  [PII]|    | Tools:    |       |  updateBudget*     [W$] |
+   |  updatePrice*  [W$] |    |  getCOGS  |       |  updateBid*        [W$] |
+   |  createRefund* [W$] |    |    [R]    |       |  createCampaign*   [W$] |
+   |                     |    |  getMrgn  |       |  pauseCampaign*    [W$] |
+   +----------+----------+    |    [R]    |       +------------+------------+
+              |               |  getACoS  |                    |
+              | LWA OAuth     |    [R]    |                    | LWA OAuth
+              v               |  updCOGS* |                    v
+   +------------------+       |   [W]     |        +----------------------+
+   |  AMAZON SP-API   |       +-----+-----+        |   AMAZON ADS API     |
+   |  (Amazon-hosted) |             |               |   (Amazon-hosted)    |
+   +------------------+             | mTLS          +----------------------+
+                                    v
+                             +-----------+
+                             |  SELLER   |
+                             |   COST    |
+                             | DATABASE  |
+                             +-----------+
+
+  LEGEND
+  +--------------------------------------------------------------------------+
+  | -->     Synchronous MCP call (JSON-RPC over HTTPS)                       |
+  | ===     Trust boundary (double line = domain boundary)                   |
+  | *       Gated tool (requires human-in-the-loop confirmation)             |
+  | [R]     Read-only       (autonomous, no gate required)                   |
+  | [W$]    Write (money)   (gated -- requires human approval)               |
+  | [W]     Write (data)    (gated -- data integrity risk)                   |
+  | [PII]   PII access      (gated even if technically read-only)            |
+  +--------------------------------------------------------------------------+
+
+
+================================================================================
+SECTION 4: DESIGN DECISION SUMMARY TABLE
+================================================================================
+
+  +-------------------+-------------------------------+-------------------------+
+  | Domain Area       | Seller  (Domain A)            | Amazon Ads  (Domain B)  |
+  +-------------------+-------------------------------+-------------------------+
+  | Discovery         | Static manifest in config     | Dynamic fetch from      |
+  |                   | file, loaded at startup        | Amazon well-known URL  |
+  +-------------------+-------------------------------+-------------------------+
+  | Authorization     | LWA OAuth (SP-API)            | LWA OAuth (Ads API)     |
+  |                   | mTLS (cost data server)       | Separate client_id      |
+  |                   | Secrets stored in vault       | Scoped to Ads API only  |
+  +-------------------+-------------------------------+-------------------------+
+  | Tool namespace    | seller:sp_api.*               | amazon:ads.*            |
+  |                   | seller:cost.*                 |                         |
+  +-------------------+-------------------------------+-------------------------+
+  | Read autonomy     | All read tools autonomous     | All read tools          |
+  |                   |                               | autonomous              |
+  +-------------------+-------------------------------+-------------------------+
+  | Write gating      | updatePrice, createRefund,    | updateBudget, updateBid |
+  |                   | updateCOGS all require gate   | createCampaign gated    |
+  +-------------------+-------------------------------+-------------------------+
+  | PII policy        | CustomerAddress gated even    | No PII flows to         |
+  |                   | if read-only; masked default  | Domain B                |
+  +-------------------+-------------------------------+-------------------------+
+  | Emergency bypass  | ACoS hard-limit triggers      | N/A                     |
+  |                   | autonomous pause + alert      |                         |
+  +-------------------+-------------------------------+-------------------------+
+  | Error isolation   | Domain A failure does not     | Domain B failure does   |
+  |                   | affect Domain B reads         | not affect Domain A     |
+  +-------------------+-------------------------------+-------------------------+
+  | Audit trail       | Append-only log, seller-      | Same log; Amazon-side   |
+  |                   | controlled storage            | changes attributed      |
+  +-------------------+-------------------------------+-------------------------+
+  | Token lifetime    | Read : 60 min refresh         | Read : 60 min refresh   |
+  |                   | Write: single-use / 5 min     | Write: gate-confirmed   |
+  +-------------------+-------------------------------+-------------------------+
+
+
+================================================================================
+SECTION 5: KEY ARCHITECTURAL PRINCIPLES (REASONING PROCESS)
+================================================================================
+
+  1. TRUST FOLLOWS CONTROL
+     The seller controls Domain A credentials, infrastructure, and policy.
+     Domain B (Amazon) sets its own rules at the server level. The agent
+     respects both without bridging them -- no credential sharing across
+     the boundary.
+
+  2. AUTONOMY IS EARNED BY REVERSIBILITY
+     Reads are autonomous because they are non-destructive. Writes that move
+     money or expose PII are gated because they are hard or impossible to
+     reverse without cost (ad spend, data leakage, pricing changes).
+
+  3. THE ORCHESTRATOR IS STATELESS ABOUT SECRETS
+     No long-lived credentials live in the agent context window. The agent
+     holds only ephemeral session tokens obtained from the MCP servers.
+     This limits blast radius if the context is logged or leaked.
+
+  4. DOMAIN ISOLATION IS A FIRST-CLASS CONCERN
+     Cross-domain joins happen in the agent's reasoning layer only.
+     Server-to-server calls between Domain A and Domain B are explicitly
+     prohibited -- this prevents privilege escalation (a compromised
+     Domain A server cannot call Domain B APIs).
+
+  5. THE GATE IS A PRODUCT FEATURE, NOT A SAFETY AFTERTHOUGHT
+     HITL confirmation is surfaced as a seller-facing approval workflow
+     with rationale, estimated impact, and a short TTL. This makes the
+     gate useful (not just a blocker) and creates an audit trail the
+     seller can use for accountability and learning.
+
+  6. EMERGENCY BYPASS IS BOUNDED AND LOUD
+     The bypass exists to protect the seller (not the agent). It is
+     narrowly scoped to one action (pause campaign), requires a hard
+     threshold to trigger, and generates an immediate alert. The seller
+     retains the ability to disable it entirely.
+
+================================================================================
+  END OF DOCUMENT
+================================================================================
