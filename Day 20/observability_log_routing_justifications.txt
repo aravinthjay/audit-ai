@@ -1,0 +1,47 @@
+OBSERVABILITY & GOVERNANCE: LOG ROUTING JUSTIFICATION REPORT
+
+================================================================================
+TICKET 04 / 08: SRE On-Call REPRODUCING A FAILING REQUEST
+================================================================================
+Ticket Prompt: "You’re reproducing a single failing request in staging — show the full call tree and pinpoint where it errored."
+Correct Answer: Trace / Spans
+
+Justification:
+1. Granularity & Scope: The ticket requires examining a "single failing request". Traces are optimized for transactional, request-level execution trees, whereas audit logs track immutable macro system events.
+2. Structure (Call Tree): It explicitly demands a "full call tree". Traces inherently construct a timed, hierarchical tree of operations (parent and child spans) that maps out exactly how microservices or internal AI agents pass data sequentially.
+3. Troubleshooting Intent ("Where"): The fundamental engineering question being asked here is "where did it break?". Traces capture exact stack errors, unhandled exceptions, and localized node failures, making them the primary tool for SRE debugging.
+
+================================================================================
+TICKET 05 / 08: FinOps COST & TOKEN MONITORING
+================================================================================
+Ticket Prompt: "FinOps wants average cost & tokens per request on a live dashboard. Sampling 10% is fine with them."
+Correct Answer: Trace / Spans
+
+Justification:
+1. Performance Metrics ("How Much"): The task involves measuring operational resource usage ("tokens per request" and "cost"). These performance-related quantitative attributes are natively embedded inside span metadata/attributes within open telemetry or tracing systems.
+2. System Configuration Matching (Sampling): The ticket states "Sampling 10% is fine with them." According to the core platform definitions, the Trace engine is explicitly set up with a "10% Trace Sampling" policy to save costs. Audit logs, by contrast, must remain 100% complete and cannot be sampled.
+3. Operational Use Case: This is an analytical and live dashboard requirement to track ongoing trends rather than a regulatory or security compliance review.
+
+================================================================================
+TICKET 06 / 08: Security DECISION RECORD IMMUTABILITY
+================================================================================
+Ticket Prompt: "This decision record must survive even a DBA with write access trying to alter it three years from now."
+Correct Answer: Audit log
+
+Justification:
+1. Tamper-Evident Architecture: The defining characteristic required here is cryptographic immutability (surviving a database administrator with full write/delete permissions attempting an alteration). The platform specifies that the Audit Log is an "append-only, hash-chained record," rendering it cryptographically tamper-evident. Traces have no such security safeguards.
+2. Long-term Retention: The record must persist "three years from now." The system specs reveal that Traces are short-lived ("Lives days"), whereas Audit Logs are built for high longevity ("7 yr audit retention").
+3. Audience: This concerns security risk mitigation and regulatory governance, which falls strictly under the purview of audit logs rather than engineering traces.
+
+================================================================================
+TICKET 08 / 08: Compliance + SRE DUAL FUNCTIONAL REQUIREMENT
+================================================================================
+Ticket Prompt: "A guardrail blocked a suspicious transaction. Compliance needs a permanent record that it was blocked; on-call needs to debug why it fired on a legit-looking request."
+Correct Answer: Both (Linked by ID)
+
+Justification:
+1. Dual Objectives (Regulatory + Engineering): 
+   - Compliance demands an immutable, historical, and un-sampled "permanent record" proving that the security boundary executed properly. This must be sent to the Audit Log.
+   - On-call engineering needs to diagnose a false positive ("debug why it fired"). This demands investigating the logical flow, execution latency, and conditions inside the request, which can only be achieved via Trace / Spans.
+2. Cross-Functional Coordination: The context tag on the ticket explicitly references "Compliance + SRE". To bridge these distinct needs, the platforms records the transaction in both locations, utilizing the unique "trace_id" as the single common thread linking the transient timing chain to the permanent cryptographic block log.
+================================================================================
