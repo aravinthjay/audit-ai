@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: skeptic_local_postgres
+    environment:
+      POSTGRES_USER: skeptic
+      POSTGRES_PASSWORD: skeptic_dev_password
+      POSTGRES_DB: skeptic_engine
+    ports:
+      - "5432:5432"
+    volumes:
+      - skeptic_local_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skeptic -d skeptic_engine"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: skeptic_local_redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - skeptic_local_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  eventstore:
+    image: eventstore/eventstore:23.10.0-bookworm-slim
+    container_name: skeptic_local_eventstore
+    environment:
+      EVENTSTORE_CLUSTER_SIZE: "1"
+      EVENTSTORE_RUN_PROJECTIONS: "All"
+      EVENTSTORE_START_STANDARD_PROJECTIONS: "true"
+      EVENTSTORE_INSECURE: "true"
+      EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP: "true"
+    ports:
+      - "2113:2113"
+    volumes:
+      - skeptic_local_eventstore_data:/var/lib/eventstore
+
+volumes:
+  skeptic_local_postgres_data:
+  skeptic_local_redis_data:
+  skeptic_local_eventstore_data:

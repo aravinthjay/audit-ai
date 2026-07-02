@@ -1,0 +1,63 @@
+{
+  "name": "professional-skepticism-engine",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.0.1",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tabs": "^1.1.12",
+    "@tanstack/react-query": "^5.80.7",
+    "@tanstack/react-table": "^8.21.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "next": "^15.3.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-hook-form": "^7.58.1",
+    "reactflow": "^11.11.4",
+    "recharts": "^2.15.3",
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.15.32",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.30.0",
+    "eslint-config-next": "^15.3.4",
+    "husky": "^9.1.7",
+    "jsdom": "^26.1.0",
+    "lint-staged": "^15.5.2",
+    "postcss": "^8.5.6",
+    "prettier": "^3.5.3",
+    "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css}": "prettier --write"
+  }
+}

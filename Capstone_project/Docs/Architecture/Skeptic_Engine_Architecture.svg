@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="1560" viewBox="0 0 880 1560" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="880" height="1560" fill="#0a0e1a"/>
+<defs>
+  <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 z" fill="#7e8aa8"/></marker>
+  <marker id="arrRed" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 z" fill="#e0786f"/></marker>
+  <marker id="arrTeal" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 z" fill="#3ec6a0"/></marker>
+  <marker id="arrGreen" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 z" fill="#57c98a"/></marker>
+  <marker id="arrOrange" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 z" fill="#e0a24f"/></marker>
+  <marker id="arrGray" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 z" fill="#566080"/></marker>
+</defs>
+<rect x="40" y="24" width="800" height="72" rx="14" fill="#101830" opacity="1" stroke="#27324f" stroke-width="1.5"/>
+<text x="440" y="55" font-size="24" fill="#ffffff" font-weight="bold" text-anchor="middle">Professional-Skepticism Engine</text>
+<text x="440" y="78" font-size="12" fill="#8b97b5" font-weight="normal" text-anchor="middle">Multi-Agent Audit Investigation Crew  ·  adversarial debate + verification  ·  human-in-the-loop</text>
+<text x="26" y="780.0" font-size="11" fill="#56608a" text-anchor="middle" transform="rotate(-90 26 780.0)" letter-spacing="2">CASE INTAKE  →  EVIDENCE  →  DEBATE + VERIFY  →  DECISION + HITL  →  REPORT</text>
+<rect x="370" y="118" width="140" height="30" rx="15" fill="#ece5cf" opacity="1"/>
+<text x="440" y="138" font-size="14" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Start</text>
+<rect x="70" y="168" width="740" height="326" rx="16" fill="#0e1626" opacity="1" stroke="#2f5d4f" stroke-width="1.5" stroke-dasharray="6 5"/>
+<rect x="86" y="156" width="150" height="22" rx="11" fill="#16432f" opacity="1"/>
+<text x="161" y="171" font-size="10.5" fill="#9fe7c6" font-weight="bold" text-anchor="middle">PHASE 0 · CASE INTAKE</text>
+<line x1="440" y1="148" x2="440" y2="168" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="290" y="190" width="300" height="46" rx="10" fill="#13243a" opacity="1" stroke="#3ec6a0" stroke-width="1.6"/>
+<text x="440" y="210" font-size="13.5" fill="#d7f2e6" font-weight="bold" text-anchor="middle">GL data feed — sample_gl_1000.csv</text>
+<text x="440" y="227" font-size="9.5" fill="#7fae9c" font-weight="normal" text-anchor="middle">txn_id · date · account · vendor · amount · currency · fx_rate · amount_usd · posted_by</text>
+<line x1="440" y1="236" x2="440" y2="262" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="300" y="262" width="280" height="40" rx="10" fill="#cfeede" opacity="1"/>
+<text x="440" y="280" font-size="13" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Ingest &amp; normalize</text>
+<text x="440" y="295" font-size="10" fill="#2c4a3c" font-weight="normal" text-anchor="middle">each row → typed Transaction (Pydantic)</text>
+<line x1="440" y1="302" x2="440" y2="328" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="275" y="328" width="330" height="56" rx="10" fill="#cfeede" opacity="1"/>
+<text x="440" y="346" font-size="12.5" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Rule-based pre-filter  ·  flagged?</text>
+<text x="440" y="362" font-size="9.5" fill="#2c4a3c" font-weight="normal" text-anchor="middle">materiality ≥ $25k · FX outlier · round-number · SoD (posted_by)</text>
+<text x="440" y="375" font-size="9.5" fill="#2c4a3c" font-weight="normal" text-anchor="middle">· duplicate · unknown vendor · off-hours posting</text>
+<rect x="730" y="336" width="78" height="40" rx="9" fill="#141a2e" opacity="1" stroke="#566080" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="769" y="352" font-size="9.5" fill="#9aa6c4" font-weight="normal" text-anchor="middle">clean rows</text>
+<text x="769" y="366" font-size="9.5" fill="#9aa6c4" font-weight="normal" text-anchor="middle">dropped</text>
+<path d="M 605 356 L 730 356" fill="none" stroke="#566080" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrGray)"/>
+<text x="667.5" y="348" font-size="9.5" fill="#9aa6c4" font-weight="bold" text-anchor="middle">No</text>
+<line x1="440" y1="384" x2="440" y2="410" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<text x="456" y="400" font-size="9.5" fill="#57c98a" font-weight="bold" text-anchor="start">Yes</text>
+<rect x="290" y="410" width="300" height="44" rx="10" fill="#cfeede" opacity="1"/>
+<text x="440" y="428" font-size="12" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Flag → create case → seed InvestigationState</text>
+<text x="440" y="444" font-size="9.5" fill="#2c4a3c" font-weight="normal" text-anchor="middle">flags[] · materiality · status=intake  → checkpoint to SQLite (thread_id)</text>
+<line x1="440" y1="454" x2="440" y2="494" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="300.0" y="508" width="280" height="50" rx="12" fill="#c9c2f0" opacity="1"/>
+<text x="440" y="531.0" font-size="14" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Supervisor · Planner agent</text>
+<text x="440" y="548.0" font-size="10" fill="#3a3168" font-weight="normal" text-anchor="middle">decompose case · route to specialists · bounded re-runs</text>
+<rect x="86" y="522" width="132" height="22" rx="11" fill="#3b2f5e" opacity="1"/>
+<text x="152" y="537" font-size="10" fill="#cdc3f5" font-weight="bold" text-anchor="middle">PHASE 1 · EVIDENCE</text>
+<line x1="440" y1="558" x2="440" y2="580" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="300.0" y="580" width="280" height="54" rx="12" fill="#f3e3c3" opacity="1"/>
+<text x="440" y="605.0" font-size="15" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Evidence agent</text>
+<text x="440" y="622.0" font-size="10" fill="#5e4f2c" font-weight="normal" text-anchor="middle">RAG policy + transaction history + live data → evidence{} + citations</text>
+<rect x="80" y="578" width="150" height="58" rx="10" fill="#101a2e" opacity="1" stroke="#3ec6a0" stroke-width="1.5"/>
+<text x="155" y="595" font-size="12" fill="#9fe7c6" font-weight="bold" text-anchor="middle">Policy KB · RAG</text>
+<text x="155" y="611" font-size="9" fill="#79a395" font-weight="normal" text-anchor="middle">approval matrices · SOPs</text>
+<text x="155" y="624" font-size="9" fill="#79a395" font-weight="normal" text-anchor="middle">related-party · vendor master</text>
+<path d="M 230 607 L 300.0 607" fill="none" stroke="#3ec6a0" stroke-width="2" marker-end="url(#arrTeal)"/>
+<rect x="650" y="578" width="150" height="58" rx="10" fill="#101a2e" opacity="1" stroke="#5b9bd5" stroke-width="1.5"/>
+<text x="725" y="595" font-size="12" fill="#a8cdf0" font-weight="bold" text-anchor="middle">Data / verify APIs</text>
+<text x="725" y="611" font-size="9" fill="#7d9ec2" font-weight="normal" text-anchor="middle">FX (Frankfurter) · price ref</text>
+<text x="725" y="624" font-size="9" fill="#7d9ec2" font-weight="normal" text-anchor="middle">timeout + cache fallback</text>
+<path d="M 650 607 L 580.0 607" fill="none" stroke="#5b9bd5" stroke-width="2" marker-end="url(#arr)"/>
+<line x1="440" y1="634" x2="440" y2="658" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="86" y="644" width="150" height="22" rx="11" fill="#3b2f5e" opacity="1"/>
+<text x="161" y="659" font-size="9.5" fill="#cdc3f5" font-weight="bold" text-anchor="middle">PHASE 2 · DEBATE + VERIFY</text>
+<rect x="287.0" y="658" width="150" height="50" rx="12" fill="#f6cdd0" opacity="1" stroke="#d98a90" stroke-width="1.6"/>
+<text x="362" y="681.0" font-size="14" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Challenger</text>
+<text x="362" y="698.0" font-size="10" fill="#6e3338" font-weight="normal" text-anchor="middle">worst-case · red flags</text>
+<rect x="443.0" y="658" width="150" height="50" rx="12" fill="#cfe0f5" opacity="1" stroke="#8fb4dd" stroke-width="1.6"/>
+<text x="518" y="681.0" font-size="14" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Defender</text>
+<text x="518" y="698.0" font-size="10" fill="#2c4565" font-weight="normal" text-anchor="middle">legitimate rationale</text>
+<text x="440" y="678" font-size="9.5" fill="#cbb4e8" text-anchor="middle" font-weight="bold">debate ⇄</text>
+<text x="440" y="691" font-size="8.5" fill="#8b97b5" text-anchor="middle">≤ 2 rounds</text>
+<path d="M 437 696 L 443 696" fill="none" stroke="#cbb4e8" stroke-width="2" marker-end="url(#arr)"/>
+<path d="M 443 670 L 437 670" fill="none" stroke="#cbb4e8" stroke-width="2" marker-end="url(#arr)"/>
+<path d="M 400 634 L 362 658" fill="none" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<path d="M 480 634 L 518 658" fill="none" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="300.0" y="734" width="280" height="50" rx="12" fill="#d9cdf2" opacity="1"/>
+<text x="440" y="757.0" font-size="14" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Adjudicator · Lead auditor</text>
+<text x="440" y="774.0" font-size="10" fill="#3a3168" font-weight="normal" text-anchor="middle">weigh both → risk · confidence · disposition · citations</text>
+<path d="M 362 708 L 410 734" fill="none" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<path d="M 518 708 L 470 734" fill="none" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="660" y="730" width="140" height="50" rx="10" fill="#101a2e" opacity="1" stroke="#d6a55a" stroke-width="1.4"/>
+<text x="730" y="748" font-size="11.5" fill="#ecc587" font-weight="bold" text-anchor="middle">Claude API</text>
+<text x="730" y="764" font-size="9" fill="#b89a64" font-weight="normal" text-anchor="middle">Sonnet — reasoning</text>
+<text x="730" y="776" font-size="9" fill="#b89a64" font-weight="normal" text-anchor="middle">Haiku — report</text>
+<line x1="660" y1="755" x2="580.0" y2="755" stroke="#d6a55a" stroke-width="1.3" stroke-dasharray="4 3"/>
+<line x1="440" y1="784" x2="440" y2="808" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="300.0" y="808" width="280" height="50" rx="12" fill="#cfe0f5" opacity="1"/>
+<text x="440" y="831.0" font-size="14" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Verifier · QA</text>
+<text x="440" y="848.0" font-size="10" fill="#2c4565" font-weight="normal" text-anchor="middle">every claim grounded?  →  pass / fail</text>
+<path d="M 300.0 833 C 215 833 215 759 300.0 759" fill="none" stroke="#e0786f" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrRed)"/>
+<text x="208" y="793.0" font-size="9.5" fill="#e0786f" text-anchor="middle" font-weight="bold">No · fail</text>
+<text x="208" y="806.0" font-size="9" fill="#e0786f" text-anchor="middle">re-run (≤2)</text>
+<text x="208" y="819.0" font-size="9" fill="#e0786f" text-anchor="middle">then escalate</text>
+<line x1="440" y1="858" x2="440" y2="886" stroke="#57c98a" stroke-width="2" marker-end="url(#arrGreen)"/>
+<text x="458" y="876" font-size="9.5" fill="#57c98a" font-weight="bold" text-anchor="start">Yes · verified</text>
+<polygon points="312.0,886 568.0,886 590.0,909.0 568.0,932 312.0,932 290.0,909.0" fill="#101a2e" stroke="#566080" stroke-width="1.6"/>
+<text x="440" y="904" font-size="13" fill="#dbe4f7" font-weight="bold" text-anchor="middle">Confidence gate  ·  route?</text>
+<text x="440" y="920" font-size="9" fill="#9aa6c4" font-weight="normal" text-anchor="middle">≥0.90 &amp; verified &amp; Low → auto-clear · 0.70–0.90 → review · else manual</text>
+<rect x="86" y="892" width="168" height="22" rx="11" fill="#3b2f5e" opacity="1"/>
+<text x="170" y="907" font-size="9.5" fill="#cdc3f5" font-weight="bold" text-anchor="middle">PHASE 3 · DECISION + HITL</text>
+<line x1="440" y1="932" x2="440" y2="962" stroke="#e0a24f" stroke-width="2" marker-end="url(#arrOrange)"/>
+<text x="454" y="950" font-size="9.5" fill="#e0a24f" font-weight="bold" text-anchor="start">review · manual</text>
+<rect x="300.0" y="962" width="280" height="52" rx="12" fill="#cfeede" opacity="1"/>
+<text x="440" y="986.0" font-size="13" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Human review   interrupt() → resume()</text>
+<text x="440" y="1003.0" font-size="10" fill="#2c4a3c" font-weight="normal" text-anchor="middle">reviewer reads transcript · approve / reject · comment · signature</text>
+<rect x="80" y="960" width="150" height="56" rx="10" fill="#101a2e" opacity="1" stroke="#3ec6a0" stroke-width="1.4"/>
+<text x="155" y="978" font-size="11.5" fill="#9fe7c6" font-weight="bold" text-anchor="middle">Reviewer / Partner</text>
+<text x="155" y="994" font-size="9" fill="#79a395" font-weight="normal" text-anchor="middle">audit senior · partner</text>
+<text x="155" y="1007" font-size="9" fill="#79a395" font-weight="normal" text-anchor="middle">SoD enforced</text>
+<path d="M 230 988 L 300.0 988" fill="none" stroke="#3ec6a0" stroke-width="2" marker-end="url(#arrTeal)"/>
+<line x1="440" y1="1014" x2="440" y2="1044" stroke="#57c98a" stroke-width="2" marker-end="url(#arrGreen)"/>
+<text x="454" y="1034" font-size="9.5" fill="#9fe7c6" font-weight="bold" text-anchor="start">approve / reject → resume()</text>
+<rect x="300.0" y="1044" width="280" height="46" rx="12" fill="#bfe3df" opacity="1"/>
+<text x="440" y="1065.0" font-size="14" fill="#0a0e1a" font-weight="bold" text-anchor="middle">Report</text>
+<text x="440" y="1082.0" font-size="10" fill="#27514c" font-weight="normal" text-anchor="middle">risk-ranked case file · debate trail · citations · MD / HTML</text>
+<path d="M 590.0 909.0 C 822 909.0 822 1067 580.0 1067" fill="none" stroke="#3ec6a0" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrTeal)"/>
+<text x="818" y="970.5" font-size="9.5" fill="#3ec6a0" text-anchor="middle" font-weight="bold">Yes ·</text>
+<text x="818" y="983.5" font-size="9.5" fill="#3ec6a0" text-anchor="middle">auto-clear</text>
+<line x1="440" y1="1090" x2="440" y2="1114" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="300.0" y="1114" width="280" height="44" rx="12" fill="#101a2e" opacity="1" stroke="#27324f" stroke-width="1.4"/>
+<text x="440" y="1134.0" font-size="13" fill="#dbe4f7" font-weight="bold" text-anchor="middle">Audit log (immutable)</text>
+<text x="440" y="1151.0" font-size="10" fill="#8b97b5" font-weight="normal" text-anchor="middle">append-only · hash-chained · debate + decision + sources</text>
+<line x1="440" y1="1158" x2="440" y2="1180" stroke="#7e8aa8" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="370" y="1180" width="140" height="30" rx="15" fill="#ece5cf" opacity="1"/>
+<text x="440" y="1200" font-size="14" fill="#0a0e1a" font-weight="bold" text-anchor="middle">End</text>
+<rect x="70" y="1234" width="740" height="56" rx="12" fill="#101830" opacity="1" stroke="#27324f" stroke-width="1.5"/>
+<text x="440" y="1254" font-size="12.5" fill="#cdd5ea" font-weight="bold" text-anchor="middle">Shared state — InvestigationState (TypedDict, SQLite-checkpointed)</text>
+<text x="440" y="1274" font-size="8.6" fill="#7e8aa8" font-weight="normal" text-anchor="middle">case · evidence{} · debate_transcript[] · challenger_view · defender_view · adjudication{} · verification{} · routing · review_history[] · audit_history[] · report</text>
+<line x1="78" y1="1312" x2="102" y2="1312" stroke="#57c98a" stroke-width="2.6" stroke-dasharray="6 4"/>
+<text x="108" y="1316" font-size="9.5" fill="#9aa6c4" font-weight="normal" text-anchor="start">Yes / pass</text>
+<line x1="186.0" y1="1312" x2="210.0" y2="1312" stroke="#e0786f" stroke-width="2.6" stroke-dasharray="6 4"/>
+<text x="216.0" y="1316" font-size="9.5" fill="#9aa6c4" font-weight="normal" text-anchor="start">No / fail → re-run loop</text>
+<line x1="366.79999999999995" y1="1312" x2="390.79999999999995" y2="1312" stroke="#e0a24f" stroke-width="2.6" stroke-dasharray="6 4"/>
+<text x="396.79999999999995" y="1316" font-size="9.5" fill="#9aa6c4" font-weight="normal" text-anchor="start">needs human</text>
+<line x1="480.4" y1="1312" x2="504.4" y2="1312" stroke="#3ec6a0" stroke-width="2.6" stroke-dasharray="6 4"/>
+<text x="510.4" y="1316" font-size="9.5" fill="#9aa6c4" font-weight="normal" text-anchor="start">auto-clear / grounding</text>
+<line x1="655.5999999999999" y1="1312" x2="679.5999999999999" y2="1312" stroke="#cbb4e8" stroke-width="2.6" stroke-dasharray="6 4"/>
+<text x="685.5999999999999" y="1316" font-size="9.5" fill="#9aa6c4" font-weight="normal" text-anchor="start">debate back-and-forth</text>
+<line x1="825.1999999999999" y1="1312" x2="849.1999999999999" y2="1312" stroke="#566080" stroke-width="2.6" stroke-dasharray="6 4"/>
+<text x="855.1999999999999" y="1316" font-size="9.5" fill="#9aa6c4" font-weight="normal" text-anchor="start">dropped rows</text>
+</svg>

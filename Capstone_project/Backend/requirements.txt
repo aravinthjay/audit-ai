@@ -1,0 +1,51 @@
+# Core FastAPI & Web
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.18
+python-dotenv==1.0.1
+websockets==13.1
+
+# Database
+sqlalchemy==2.0.36
+psycopg2-binary==2.9.10
+alembic==1.14.0
+
+# ORM & Validation
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# Vector Database (RAG)
+pgvector==0.3.6
+numpy==1.26.4
+
+# Task Queue & Caching
+celery==5.4.0
+redis==5.2.1
+flower==2.0.1
+
+# Agent Orchestration & LLM
+langgraph==0.2.60
+langchain==0.3.13
+langchain-core==0.3.28
+langchain-anthropic==0.3.1
+anthropic==0.42.0
+
+# EventStoreDB (maintained client; replaces the unmaintained `esdb` package)
+esdbclient==1.1.3
+
+# Security & Auth
+python-jose[cryptography]==3.3.0
+bcrypt==4.2.1
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.25.0
+pytest-cov==6.0.0
+httpx==0.28.1
+
+# Monitoring & Logging
+python-json-logger==3.2.1
+
+# Utils
+tenacity==9.0.0
+requests==2.32.3

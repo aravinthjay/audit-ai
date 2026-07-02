@@ -1,0 +1,235 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: skeptic_postgres
+    environment:
+      POSTGRES_USER: skeptic
+      POSTGRES_PASSWORD: skeptic_dev_password
+      POSTGRES_DB: skeptic_engine
+      POSTGRES_INITDB_ARGS: "--locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skeptic -d skeptic_engine"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skeptic_network
+
+  # Redis (Broker & Cache)
+  redis:
+    image: redis:7-alpine
+    container_name: skeptic_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skeptic_network
+
+  # pgAdmin (PostgreSQL admin UI)
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: skeptic_pgadmin
+    profiles:
+      - tools
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@skeptic.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - skeptic_network
+
+  # EventStoreDB
+  eventstore:
+    image: eventstore/eventstore:23.10.0-bookworm-slim
+    container_name: skeptic_eventstore
+    environment:
+      EVENTSTORE_CLUSTER_SIZE: "1"
+      EVENTSTORE_RUN_PROJECTIONS: "All"
+      EVENTSTORE_START_STANDARD_PROJECTIONS: "true"
+      EVENTSTORE_INSECURE: "true"
+      EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP: "true"
+    ports:
+      - "1113:1113"
+      - "2113:2113"
+    volumes:
+      - eventstore_data:/var/lib/eventstore
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2113/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skeptic_network
+
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skeptic_api
+    environment:
+      ENV: development
+      DEBUG: "true"
+      LOG_LEVEL: INFO
+      DATABASE_URL: postgresql://skeptic:skeptic_dev_password@postgres:5432/skeptic_engine
+      REDIS_URL: redis://redis:6379/0
+      USE_REDIS_EVENTS: "true"
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      USE_CELERY: "true"
+      EVENTSTORE_URL: "esdb://eventstore:2113?tls=false"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER:-anthropic}
+      ENABLE_LLM_FALLBACK: ${ENABLE_LLM_FALLBACK:-true}
+      LLM_FALLBACK_ORDER: ${LLM_FALLBACK_ORDER:-groq,openai}
+      LLM_PRICING_OVERRIDES_JSON: ${LLM_PRICING_OVERRIDES_JSON:-}
+      AUTH_REQUIRED: ${AUTH_REQUIRED:-false}
+      SECRET_KEY: ${SECRET_KEY:-}
+      SEED_DEFAULT_USER: ${SEED_DEFAULT_USER:-false}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-}
+      CORS_ORIGINS: '["http://localhost:3000", "http://localhost:8000"]'
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eventstore:
+        condition: service_healthy
+    volumes:
+      - ./:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skeptic_network
+
+  # Celery Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skeptic_worker
+    environment:
+      ENV: development
+      DEBUG: "true"
+      LOG_LEVEL: INFO
+      DATABASE_URL: postgresql://skeptic:skeptic_dev_password@postgres:5432/skeptic_engine
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      EVENTSTORE_URL: "esdb://eventstore:2113?tls=false"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER:-anthropic}
+      ENABLE_LLM_FALLBACK: ${ENABLE_LLM_FALLBACK:-true}
+      LLM_FALLBACK_ORDER: ${LLM_FALLBACK_ORDER:-groq,openai}
+      LLM_PRICING_OVERRIDES_JSON: ${LLM_PRICING_OVERRIDES_JSON:-}
+      AUTH_REQUIRED: ${AUTH_REQUIRED:-false}
+      SECRET_KEY: ${SECRET_KEY:-}
+      SEED_DEFAULT_USER: ${SEED_DEFAULT_USER:-false}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-}
+    depends_on:
+      - postgres
+      - redis
+      - eventstore
+      - api
+    volumes:
+      - ./:/app
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=4
+    networks:
+      - skeptic_network
+
+  # Celery Beat (Scheduler)
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skeptic_beat
+    environment:
+      ENV: development
+      DEBUG: "true"
+      LOG_LEVEL: INFO
+      DATABASE_URL: postgresql://skeptic:skeptic_dev_password@postgres:5432/skeptic_engine
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      EVENTSTORE_URL: "esdb://eventstore:2113?tls=false"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER:-anthropic}
+      ENABLE_LLM_FALLBACK: ${ENABLE_LLM_FALLBACK:-true}
+      LLM_FALLBACK_ORDER: ${LLM_FALLBACK_ORDER:-groq,openai}
+      LLM_PRICING_OVERRIDES_JSON: ${LLM_PRICING_OVERRIDES_JSON:-}
+      AUTH_REQUIRED: ${AUTH_REQUIRED:-false}
+      SECRET_KEY: ${SECRET_KEY:-}
+      SEED_DEFAULT_USER: ${SEED_DEFAULT_USER:-false}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-}
+    depends_on:
+      - postgres
+      - redis
+      - eventstore
+    volumes:
+      - ./:/app
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    networks:
+      - skeptic_network
+
+  # Flower (Celery Monitoring)
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skeptic_flower
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - worker
+    command: celery -A app.tasks.celery_app flower --port=5555 --broker=redis://redis:6379/1
+    networks:
+      - skeptic_network
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  redis_data:
+    driver: local
+  eventstore_data:
+    driver: local
+
+networks:
+  skeptic_network:
+    driver: bridge

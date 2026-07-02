@@ -1,0 +1,141 @@
+name: skeptic-engine-production
+
+x-backend-env: &backend-env
+  ENV: production
+  DEBUG: "false"
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  API_ROOT_PATH: /api/v1
+  DATABASE_URL: postgresql://skeptic:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/skeptic_engine
+  REDIS_URL: redis://redis:6379/0
+  USE_REDIS_EVENTS: "true"
+  CELERY_BROKER_URL: redis://redis:6379/1
+  CELERY_RESULT_BACKEND: redis://redis:6379/2
+  USE_CELERY: "true"
+  USE_EVENTSTORE: ${USE_EVENTSTORE:-true}
+  EVENTSTORE_URL: esdb://eventstore:2113?tls=false
+  AUDIT_FALLBACK_TO_POSTGRES: "true"
+  AUTH_REQUIRED: "true"
+  SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
+  SEED_DEFAULT_USER: ${SEED_DEFAULT_USER:-false}
+  DEFAULT_ADMIN_USERNAME: ${DEFAULT_ADMIN_USERNAME:-admin}
+  DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-}
+  DEFAULT_ADMIN_ROLE: ${DEFAULT_ADMIN_ROLE:-partner}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  GROQ_API_KEY: ${GROQ_API_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  DEFAULT_LLM_PROVIDER: ${DEFAULT_LLM_PROVIDER:-anthropic}
+  ENABLE_LLM_FALLBACK: ${ENABLE_LLM_FALLBACK:-true}
+  LLM_FALLBACK_ORDER: ${LLM_FALLBACK_ORDER:-groq,openai}
+  LLM_PRICING_OVERRIDES_JSON: ${LLM_PRICING_OVERRIDES_JSON:-}
+  USE_REAL_AGENTS: ${USE_REAL_AGENTS:-true}
+  CORS_ORIGINS: '${CORS_ORIGINS:?Set CORS_ORIGINS JSON list}'
+  ALLOWED_HOSTS: '${ALLOWED_HOSTS:?Set ALLOWED_HOSTS JSON list}'
+  REQUEST_LOGGING_ENABLED: ${REQUEST_LOGGING_ENABLED:-true}
+  REQUEST_LOG_EXCLUDED_PATHS: '${REQUEST_LOG_EXCLUDED_PATHS:-["/health","/health/detailed","/docs","/openapi.json","/favicon.ico"]}'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: skeptic
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: skeptic_engine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skeptic -d skeptic_engine"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  eventstore:
+    image: eventstore/eventstore:23.10.0-bookworm-slim
+    restart: unless-stopped
+    environment:
+      EVENTSTORE_CLUSTER_SIZE: "1"
+      EVENTSTORE_RUN_PROJECTIONS: "All"
+      EVENTSTORE_START_STANDARD_PROJECTIONS: "true"
+      EVENTSTORE_INSECURE: "true"
+      EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP: "true"
+    volumes:
+      - eventstore_data:/var/lib/eventstore
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2113/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: ${BACKEND_IMAGE:?Set BACKEND_IMAGE}
+    restart: "no"
+    environment: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: alembic upgrade head
+
+  api:
+    image: ${BACKEND_IMAGE:?Set BACKEND_IMAGE}
+    restart: unless-stopped
+    environment: *backend-env
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eventstore:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  worker:
+    image: ${BACKEND_IMAGE:?Set BACKEND_IMAGE}
+    restart: unless-stopped
+    environment: *backend-env
+    depends_on:
+      - api
+      - redis
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=${CELERY_WORKER_CONCURRENCY:-4}
+
+  beat:
+    image: ${BACKEND_IMAGE:?Set BACKEND_IMAGE}
+    restart: unless-stopped
+    environment: *backend-env
+    depends_on:
+      - redis
+      - api
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+
+  ui:
+    image: ${UI_IMAGE:?Set UI_IMAGE}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:?Set NEXT_PUBLIC_API_BASE_URL}
+    ports:
+      - "${UI_PORT:-3000}:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:
+  eventstore_data:

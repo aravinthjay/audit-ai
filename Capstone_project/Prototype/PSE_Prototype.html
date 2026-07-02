@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Professional-Skepticism Engine — Prototype</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.17.0/dist/tabler-icons.min.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+--bg:#F5F6FA;--card:#fff;--bd:#E7E9F2;--bd2:#E2E5EE;--soft:#EEF0F6;
+--tx:#141A2E;--tx2:#5B6478;--tx3:#8A93A8;
+--pu:#6D49E0;--puf:#7C5CFF;--pus:#F2EEFE;--pub:#E4DBFB;
+--grn:#10B981;--grnt:#047857;--grns:#E6F6EF;--grnb:#BFE8D6;
+--amb:#F59E0B;--ambt:#B45309;--ambs:#FCF1DC;--ambb:#F4DCA6;
+--red:#EF4444;--redt:#DC2626;--reds:#FCEAEA;--redb:#F6CFCF;
+--blu:#3B82F6;--blut:#2563EB;--blus:#E8F0FE;--blub:#BBD3F6;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:13px}
+.mono{font-family:'JetBrains Mono',monospace}
+.lbl{font-size:11.5px;color:var(--tx3)}
+.app{display:flex;height:100vh;overflow:hidden}
+.side{width:236px;flex-shrink:0;background:#fff;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 14px;margin-bottom:6px;border-bottom:1px solid var(--soft)}
+.brand .logo{width:30px;height:30px;border-radius:9px;background:var(--pus);border:1px solid var(--pub);display:flex;align-items:center;justify-content:center;color:var(--pu);font-size:18px}
+.navsec{font-size:10px;letter-spacing:.6px;color:var(--tx3);text-transform:uppercase;padding:12px 8px 4px}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--tx2);font-size:13px;cursor:pointer;user-select:none}
+.nav i{font-size:17px}
+.nav:hover{background:var(--soft)}
+.nav.on{background:var(--pus);color:var(--pu)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top{height:54px;flex-shrink:0;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:14px;padding:0 18px}
+.search{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--bd2);border-radius:8px;padding:7px 11px;width:230px;color:var(--tx3);font-size:12px}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--grns);color:var(--grnt);font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center}
+.content{flex:1;overflow:auto;padding:20px 22px}
+.screen{display:none;max-width:1080px;margin:0 auto}
+.screen.on{display:block}
+.h{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+.h .ttl{font-size:19px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.pad{padding:14px 16px}
+.grid{display:grid;gap:12px}
+.btn{border:1px solid var(--bd2);background:#fff;color:var(--tx2);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn.pri{background:var(--pu);color:#fff;border-color:var(--pu);font-weight:500}
+.btn.ok{background:var(--grn);color:#fff;border-color:var(--grn);font-weight:500}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.pulse{animation:pz 1.4s ease-in-out infinite}@keyframes pz{0%,100%{opacity:1}50%{opacity:.35}}
+.gw{animation:gw 1.8s ease-in-out infinite}@keyframes gw{0%{width:8%}50%{width:74%}100%{width:8%}}
+.badge{border-radius:6px;padding:2px 8px;font-size:11px;border:1px solid transparent}
+.b-high{background:var(--reds);color:var(--redt);border-color:var(--redb)}
+.b-med{background:var(--ambs);color:var(--ambt);border-color:var(--ambb)}
+.b-low{background:var(--grns);color:var(--grnt);border-color:var(--grnb)}
+.chip{font-size:11px;border-radius:6px;padding:3px 8px}
+.kpi{font-size:24px;font-weight:600;margin-top:3px}
+.row{display:flex;align-items:center;gap:10px}
+a{color:var(--pu);text-decoration:none}
+.tablerow{display:grid;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #F4F5F9;font-size:12.5px;cursor:pointer}
+.tablerow:hover{background:#FAFAFE}
+.nrow{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px}
+.nic{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.bar{height:4px;border-radius:3px;background:var(--pus);overflow:hidden}
+.bar>i{display:block;height:4px;border-radius:3px;background:var(--puf)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="logo"><i class="ti ti-shield-search"></i></div><div><div style="font-size:13px;font-weight:600">Skepticism Engine</div><div class="lbl">Audit AI · Team 01</div></div></div>
+    <div style="overflow:auto;flex:1">
+    <div class="navsec">Workspace</div>
+    <div class="nav on" data-s="dashboard"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+    <div class="nav" data-s="intake"><i class="ti ti-file-upload"></i> Case intake</div>
+    <div class="nav" data-s="investigations"><i class="ti ti-folders"></i> Investigations</div>
+    <div class="nav" data-s="workspace"><i class="ti ti-target"></i> Workspace</div>
+    <div class="navsec">Investigation</div>
+    <div class="nav" data-s="debate"><i class="ti ti-messages"></i> Debate viewer</div>
+    <div class="nav" data-s="evidence"><i class="ti ti-files"></i> Evidence explorer</div>
+    <div class="nav" data-s="verification"><i class="ti ti-checkup-list"></i> Verification</div>
+    <div class="nav" data-s="review"><i class="ti ti-user-check"></i> Human review</div>
+    <div class="nav" data-s="replay"><i class="ti ti-player-play"></i> Replay</div>
+    <div class="nav" data-s="audit"><i class="ti ti-lock-check"></i> Audit log</div>
+    <div class="navsec">Output</div>
+    <div class="nav" data-s="reports"><i class="ti ti-file-text"></i> Reports</div>
+    <div class="nav" data-s="analytics"><i class="ti ti-chart-histogram"></i> Analytics</div>
+    <div class="nav" data-s="eval"><i class="ti ti-flask"></i> A/B evaluation</div>
+    <div class="nav" data-s="knowledge"><i class="ti ti-book-2"></i> Knowledge base</div>
+    <div class="nav" data-s="settings"><i class="ti ti-settings"></i> Settings</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="top">
+      <div id="crumb" class="lbl" style="font-size:13px;color:var(--tx2)">Dashboard</div>
+      <div class="search" style="margin-left:auto"><i class="ti ti-search" style="font-size:14px"></i> Search<span class="mono" style="margin-left:auto">⌘K</span></div>
+      <div style="position:relative;color:var(--tx2)"><i class="ti ti-bell" style="font-size:18px"></i><span class="dot" style="background:var(--red);position:absolute;top:-1px;right:-1px"></span></div>
+      <div class="avatar">AA</div>
+    </div>
+    <div class="content">
+
+    <!-- DASHBOARD -->
+    <section class="screen on" id="s-dashboard">
+      <div class="h"><div><div class="ttl">Executive overview</div><div class="lbl">Engagement · ACME Holdings · FY26 Q2 close</div></div>
+      <div class="row"><button class="btn"><i class="ti ti-calendar"></i> Last 30 days</button><button class="btn pri" onclick="go('intake')"><i class="ti ti-plus"></i> New investigation</button></div></div>
+      <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px">
+        <div class="card pad"><div class="lbl">Open investigations</div><div class="kpi">127</div><div style="font-size:11.5px;color:var(--grnt)"><i class="ti ti-trending-up"></i> 18 today</div></div>
+        <div class="card pad"><div class="lbl">High-risk cases</div><div class="kpi" style="color:var(--redt)">13</div><div class="lbl" style="font-size:11.5px">11 awaiting partner</div></div>
+        <div class="card pad"><div class="lbl">Avg. confidence</div><div class="kpi">0.86</div><div style="font-size:11.5px;color:var(--grnt)"><i class="ti ti-trending-up"></i> +0.04</div></div>
+        <div class="card pad"><div class="lbl">Token cost · 30d</div><div class="kpi">$842</div><div class="lbl mono" style="font-size:11.5px">4.1M tokens</div></div>
+      </div>
+      <div class="grid" style="grid-template-columns:1.3fr 1fr;margin-bottom:12px">
+        <div class="card pad">
+          <div class="row" style="justify-content:space-between;margin-bottom:11px"><b style="font-weight:600">Risk distribution</b><span class="lbl">95 flagged of 1,000</span></div>
+          <div id="riskbars"></div>
+          <div class="row" style="gap:8px;margin-top:13px;padding-top:11px;border-top:1px solid var(--soft)">
+            <div style="flex:1"><div class="lbl">Auto-cleared</div><div style="font-size:15px;font-weight:600">44</div></div>
+            <div style="flex:1"><div class="lbl">In review</div><div style="font-size:15px;font-weight:600">39</div></div>
+            <div style="flex:1"><div class="lbl">Manual</div><div style="font-size:15px;font-weight:600;color:var(--ambt)">12</div></div>
+          </div>
+        </div>
+        <div class="card pad"><b style="font-weight:600">Agent health</b>
+          <div style="display:flex;flex-direction:column;gap:9px;margin-top:11px;font-size:12.5px">
+            <div class="row"><span class="dot" style="background:var(--grn)"></span>Evidence<span class="lbl mono" style="margin-left:auto">240ms</span></div>
+            <div class="row"><span class="dot" style="background:var(--grn)"></span>Challenger<span class="lbl mono" style="margin-left:auto">1.1s</span></div>
+            <div class="row"><span class="dot" style="background:var(--grn)"></span>Defender<span class="lbl mono" style="margin-left:auto">1.0s</span></div>
+            <div class="row"><span class="dot pulse" style="background:var(--amb)"></span>Adjudicator<span class="mono" style="margin-left:auto;color:var(--ambt)">running</span></div>
+            <div class="row"><span class="dot" style="background:var(--blu)"></span>Verifier<span class="lbl mono" style="margin-left:auto">queued</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div class="row" style="justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--soft)"><b style="font-weight:600">Recent investigations</b><a onclick="go('investigations')">View all <i class="ti ti-arrow-right"></i></a></div>
+        <div class="tablerow lbl" style="grid-template-columns:90px 1.6fr 90px 70px 90px;font-size:11px;cursor:default"><span>Case</span><span>Vendor / account</span><span>Amount</span><span>Conf.</span><span>Status</span></div>
+        <div class="tablerow" style="grid-template-columns:90px 1.6fr 90px 70px 90px" onclick="go('workspace')"><span class="mono" style="color:var(--tx2)">CASE-0007</span><span>Mehta Family Holdings <span class="lbl">· Consulting</span></span><span class="mono">$58,000</span><span class="mono" style="color:var(--ambt)">0.86</span><span><span class="badge b-high">High</span></span></div>
+        <div class="tablerow" style="grid-template-columns:90px 1.6fr 90px 70px 90px" onclick="go('workspace')"><span class="mono" style="color:var(--tx2)">CASE-0042</span><span>SkyHigh Travel <span class="lbl">· T&amp;E</span></span><span class="mono">$6,800</span><span class="mono" style="color:var(--grnt)">0.93</span><span><span class="badge b-med">Medium</span></span></div>
+        <div class="tablerow" style="grid-template-columns:90px 1.6fr 90px 70px 90px" onclick="go('workspace')"><span class="mono" style="color:var(--tx2)">CASE-0051</span><span>Staples Inc <span class="lbl">· Office</span></span><span class="mono">$312</span><span class="mono" style="color:var(--grnt)">0.97</span><span><span class="badge b-low">Cleared</span></span></div>
+      </div>
+    </section>
+
+    <!-- CASE INTAKE (Phase 0) -->
+    <section class="screen" id="s-intake">
+      <div class="h"><div><div class="ttl">Case intake</div><div class="lbl">Phase 0 · GL ingestion + rule pre-filter — only flagged rows become cases</div></div>
+      <div class="row"><button class="btn"><i class="ti ti-history"></i> Past runs</button><button class="btn pri" onclick="go('investigations')"><i class="ti ti-player-play"></i> Create cases &amp; run crew</button></div></div>
+      <div class="grid" style="grid-template-columns:1.1fr 1fr;margin-bottom:12px">
+        <div class="card pad">
+          <b style="font-weight:600">GL data feed</b>
+          <div style="margin-top:10px;border:1.5px dashed var(--bd2);border-radius:10px;padding:18px;display:flex;align-items:center;gap:12px;background:#FAFBFE">
+            <span class="nic" style="width:38px;height:38px;background:var(--grns);color:var(--grnt)"><i class="ti ti-file-spreadsheet" style="font-size:19px"></i></span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:500">sample_gl_1000.csv</div><div class="lbl mono">1,000 rows · 10 columns · 218 KB</div></div>
+            <span class="chip" style="background:var(--grns);color:var(--grnt);border:1px solid var(--grnb)"><i class="ti ti-circle-check"></i> ingested</span>
+          </div>
+          <div class="lbl mono" style="margin-top:9px">txn_id · date · account · vendor · description · currency · amount · fx_rate_used · amount_usd · posted_by</div>
+          <div class="row" style="gap:7px;margin-top:11px"><button class="btn"><i class="ti ti-upload"></i> Replace file</button><button class="btn pri"><i class="ti ti-filter-check"></i> Run pre-filter</button></div>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;align-content:start">
+          <div class="card pad"><div class="lbl">Rows ingested</div><div class="kpi">1,000</div><div class="lbl" style="font-size:11.5px">0 parse errors</div></div>
+          <div class="card pad"><div class="lbl">Flagged → cases</div><div class="kpi" style="color:var(--pu)">95</div><div style="font-size:11.5px;color:var(--pu)">enter the crew</div></div>
+          <div class="card pad"><div class="lbl">Cleared at intake</div><div class="kpi" style="color:var(--grnt)">905</div><div class="lbl" style="font-size:11.5px">dropped · no case</div></div>
+          <div class="card pad"><div class="lbl">Est. crew cost</div><div class="kpi">$20</div><div class="lbl mono" style="font-size:11.5px">95 × $0.21</div></div>
+        </div>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr 1.3fr">
+        <div class="card pad"><b style="font-weight:600">Rule pre-filter</b><div class="lbl" style="margin:2px 0 10px">rows tripping each deterministic rule (a row may trip several)</div>
+          <div id="rulebars"></div>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div class="row" style="justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--soft)"><b style="font-weight:600">Flagged rows → cases</b><a onclick="go('investigations')">Open queue <i class="ti ti-arrow-right"></i></a></div>
+          <div class="tablerow lbl" style="grid-template-columns:96px 1.4fr 90px 1.3fr;font-size:11px;cursor:default"><span>Txn</span><span>Vendor / account</span><span>Amount</span><span>Rules fired</span></div>
+          <div id="intakelist"></div>
+        </div>
+      </div>
+      <div class="card pad" style="margin-top:12px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx2)"><i class="ti ti-info-circle" style="color:var(--blut);font-size:16px"></i> 905 clean rows were recorded as cleared-at-intake and never reach the agent crew — keeping the expensive debate off ~90% of the ledger.<button class="btn pri" style="margin-left:auto" onclick="go('investigations')">Create 95 cases <i class="ti ti-arrow-right"></i></button></div>
+    </section>
+
+    <!-- INVESTIGATIONS LIST -->
+    <section class="screen" id="s-investigations">
+      <div class="h"><div><div class="ttl">Investigations</div><div class="lbl">95 flagged · filter, triage, open</div></div>
+      <div class="row"><button class="btn"><i class="ti ti-filter"></i> Filters</button><button class="btn pri" onclick="go('intake')"><i class="ti ti-plus"></i> New</button></div></div>
+      <div class="row" style="gap:6px;margin-bottom:12px;font-size:11.5px">
+        <span class="chip" style="background:var(--pus);color:var(--pu);border:1px solid var(--pub)">All · 95</span>
+        <span class="chip btn">High · 13</span><span class="chip btn">Medium · 27</span><span class="chip btn">Low · 55</span>
+        <span class="chip btn" style="margin-left:auto">Awaiting me · 11</span>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div class="tablerow lbl" style="grid-template-columns:96px 1.5fr 100px 70px 1fr 90px;font-size:11px;cursor:default"><span>Case</span><span>Vendor / account</span><span>Amount</span><span>Conf.</span><span>Top flags</span><span>Status</span></div>
+        <div id="invlist"></div>
+      </div>
+    </section>
+
+    <!-- WORKSPACE -->
+    <section class="screen" id="s-workspace">
+      <div class="lbl" style="margin-bottom:10px"><i class="ti ti-folder"></i> Investigations <i class="ti ti-chevron-right" style="font-size:11px"></i> <span style="color:var(--tx2)">CASE-0007</span></div>
+      <div class="card pad" style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:10px;background:var(--pus);border:1px solid var(--pub);display:flex;align-items:center;justify-content:center;color:var(--pu)"><i class="ti ti-building-bank" style="font-size:19px"></i></div>
+        <div><div style="font-size:16px;font-weight:600">Mehta Family Holdings <span class="lbl" style="font-weight:400;font-size:13px">· Consulting · 2026-05-20</span></div><div class="lbl mono">CASE-0007 · TXN-0876 · posted by rkumar</div></div>
+        <div style="margin-left:auto;text-align:right"><div style="font-size:20px;font-weight:600" class="mono">$58,000</div><span class="badge b-high">High risk</span></div>
+        <div class="row" style="margin-left:14px"><button class="btn" onclick="go('replay')"><i class="ti ti-player-play"></i> Replay</button><button class="btn" onclick="go('reports')"><i class="ti ti-file-export"></i> Export</button></div>
+      </div>
+      <div class="grid" style="grid-template-columns:1.35fr 1fr">
+        <div class="card pad">
+          <div class="row" style="justify-content:space-between;margin-bottom:12px"><b style="font-weight:600"><span class="dot pulse" style="background:var(--amb);margin-right:7px"></span>Live agent execution</b><span class="lbl mono">6 / 10 · 4.1s</span></div>
+          <div id="pipeline"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card pad">
+            <div class="row" style="justify-content:space-between;margin-bottom:10px"><b style="font-weight:600">Confidence</b><span class="mono" style="color:var(--ambt)">0.86</span></div>
+            <div style="position:relative;height:8px;border-radius:5px;display:flex;overflow:hidden"><div style="width:70%;background:var(--reds)"></div><div style="width:20%;background:var(--ambs)"></div><div style="width:10%;background:var(--grns)"></div><div style="position:absolute;left:86%;top:-3px;width:2px;height:14px;background:var(--tx)"></div></div>
+            <div class="row" style="justify-content:space-between;margin-top:6px"><span class="lbl">manual</span><span class="lbl">review</span><span class="lbl">auto</span></div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--soft);font-size:12px;color:var(--tx2)">Routed to <span style="color:var(--ambt)">manual · partner</span> — amount ≥ $25,000.</div>
+          </div>
+          <div class="card pad"><b style="font-weight:600">Flags</b>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px">
+              <span class="chip" style="background:var(--reds);color:var(--redt)">Related party</span><span class="chip" style="background:var(--soft);color:var(--tx2)">Round dollar</span><span class="chip" style="background:var(--soft);color:var(--tx2)">Outlier 4.1σ</span><span class="chip" style="background:var(--reds);color:var(--redt)">Ghost vendor</span><span class="chip" style="background:var(--ambs);color:var(--ambt)">Approval breach</span>
+            </div>
+          </div>
+          <div class="card pad"><b style="font-weight:600">Human review</b>
+            <div class="row" style="gap:9px;margin:11px 0"><div class="avatar" style="background:var(--blus);color:var(--blut)">AS</div><div style="font-size:12px"><div>a.sharma <span class="lbl">· Partner</span></div><div class="lbl">awaiting decision</div></div></div>
+            <div class="row" style="gap:7px"><button class="btn ok" style="flex:1;justify-content:center" onclick="go('review')">Approve</button><button class="btn" style="flex:1;justify-content:center;border-color:var(--redb);color:var(--redt)" onclick="go('review')">Reject</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:12px">
+        <div class="card pad"><b style="font-weight:600"><i class="ti ti-files" style="color:var(--blut)"></i> Evidence</b>
+          <div style="font-size:12px;color:var(--tx2);display:flex;flex-direction:column;gap:8px;margin-top:10px">
+            <div class="row" style="gap:8px"><i class="ti ti-book-2" style="color:var(--pu)"></i> RP-01 §2 — related-party review <span class="lbl" style="margin-left:auto">v2.1</span></div>
+            <div class="row" style="gap:8px"><i class="ti ti-book-2" style="color:var(--pu)"></i> AP-02 §1 — $25k partner approval <span class="lbl" style="margin-left:auto">v3.0</span></div>
+            <div class="row" style="gap:8px"><i class="ti ti-database" style="color:var(--blut)"></i> Vendor master — not found <span style="margin-left:auto;color:var(--redt)">flag</span></div>
+          </div>
+          <a onclick="go('evidence')" style="font-size:12px;display:inline-block;margin-top:10px">Open explorer <i class="ti ti-arrow-right"></i></a>
+        </div>
+        <div class="card pad"><b style="font-weight:600"><i class="ti ti-messages" style="color:var(--pu)"></i> Debate</b>
+          <div style="font-size:11.5px;display:flex;flex-direction:column;gap:8px;margin-top:10px">
+            <div style="border-left:2px solid var(--red);padding:2px 0 2px 9px"><div style="color:var(--redt)">Challenger</div><div style="color:var(--tx2)">Related party + 4.1σ outlier + ghost vendor.</div></div>
+            <div style="border-left:2px solid var(--grn);padding:2px 0 2px 9px"><div style="color:var(--grnt)">Defender</div><div style="color:var(--tx2)">Possible retainer — but no contract on file.</div></div>
+          </div>
+          <a onclick="go('debate')" style="font-size:12px;display:inline-block;margin-top:10px">Open debate <i class="ti ti-arrow-right"></i></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEBATE -->
+    <section class="screen" id="s-debate">
+      <div class="h"><div><div class="ttl">Adversarial debate</div><div class="lbl mono">CASE-0007 · Mehta Family Holdings · $58,000</div></div>
+      <div class="row" style="gap:6px"><span class="chip" style="background:var(--soft);color:var(--tx2)">Round 1 of 2</span><span class="chip" style="background:var(--grns);color:var(--grnt)"><i class="ti ti-circle-check"></i> Verified</span></div></div>
+      <div class="grid" style="grid-template-columns:1fr 160px 1fr">
+        <div>
+          <div class="row" style="gap:7px;margin-bottom:9px"><span class="nic" style="background:var(--reds);color:var(--redt)"><i class="ti ti-swords" style="font-size:13px"></i></span><b style="color:var(--redt);font-weight:600">Challenger</b><span class="lbl mono" style="margin-left:auto">10:42:03</span></div>
+          <div class="card pad" style="border-top:2px solid var(--red);border-radius:0 0 12px 12px"><div style="line-height:1.55;margin-bottom:9px">Vendor implies a related party to director J. Mehta; $58,000 is 4.1σ above the account mean and an exact round number. Vendor absent from approved master.</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px"><span class="chip" style="background:var(--reds);color:var(--redt)">related party</span><span class="chip" style="background:var(--reds);color:var(--redt)">ghost vendor</span><span class="chip" style="background:var(--ambs);color:var(--ambt)">approval breach</span></div>
+            <div class="row" style="justify-content:space-between;padding-top:8px;border-top:1px solid var(--soft)"><span class="lbl"><i class="ti ti-book-2"></i> RP-01 §2 · AP-02 §1</span><span style="font-size:11px;color:var(--redt)">severity high</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div class="lbl" style="margin-bottom:10px"><i class="ti ti-gavel" style="color:var(--pu)"></i> Judge</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:16px;flex:1">
+            <span class="dot" style="background:var(--red);width:9px;height:9px"></span>
+            <span class="dot" style="background:var(--grn);width:9px;height:9px"></span>
+            <div style="text-align:center"><span class="dot" style="background:var(--puf);width:13px;height:13px"></span><div style="font-size:10px;color:var(--pu);margin-top:4px">weighs both</div></div>
+            <div style="text-align:center"><span class="dot" style="background:var(--blu);width:9px;height:9px"></span><div style="font-size:10px;color:var(--blut);margin-top:4px">4/4 grounded</div></div>
+          </div>
+          <div style="margin-top:12px;background:var(--pus);border:1px solid var(--pub);border-radius:9px;padding:9px;text-align:center;width:100%"><div class="lbl" style="color:var(--pu)">Verdict</div><div style="font-size:13px;font-weight:600;color:var(--redt)">High</div><div style="font-size:10.5px;color:var(--tx2)">investigate before reliance</div><div class="mono" style="font-size:11px;color:var(--ambt);margin-top:4px">conf 0.86</div></div>
+        </div>
+        <div>
+          <div class="row" style="gap:7px;margin-bottom:9px"><span class="nic" style="background:var(--grns);color:var(--grnt)"><i class="ti ti-shield-half" style="font-size:13px"></i></span><b style="color:var(--grnt);font-weight:600">Defender</b><span class="lbl mono" style="margin-left:auto">10:42:05</span></div>
+          <div class="card pad" style="border-top:2px solid var(--grn);border-radius:0 0 12px 12px"><div style="line-height:1.55;margin-bottom:9px">Large one-off strategy retainers do occur and can be round by contract; related-party spend is permitted if independently approved and disclosed.</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px"><span class="chip" style="background:var(--soft);color:var(--tx2)">needs: contract</span><span class="chip" style="background:var(--soft);color:var(--tx2)">needs: approval</span></div>
+            <div class="row" style="justify-content:space-between;padding-top:8px;border-top:1px solid var(--soft)"><span class="lbl"><i class="ti ti-info-circle"></i> isolated from challenger</span><span style="font-size:11px;color:var(--grnt)">legit 0.25</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EVIDENCE -->
+    <section class="screen" id="s-evidence">
+      <div class="h"><div><div class="ttl">Evidence explorer</div><div class="lbl mono">CASE-0007 · 8 sources · 12 citations</div></div><div class="search"><i class="ti ti-search" style="font-size:14px"></i> Search evidence</div></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:12px;font-size:11.5px">
+        <span class="chip" style="background:var(--pus);color:var(--pu);border:1px solid var(--pub)">All · 8</span><span class="chip btn">Policy · 2</span><span class="chip btn">History · 2</span><span class="chip btn">Vendor · 1</span><span class="chip btn">External API · 3</span></div>
+      <div class="grid" style="grid-template-columns:1.25fr 1fr">
+        <div class="card" style="overflow:hidden" id="evlist"></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card pad"><b style="font-weight:600">Evidence graph</b>
+            <svg viewBox="0 0 260 150" width="100%" style="margin-top:6px" role="img" aria-label="Graph linking the case to policy, vendor and history evidence">
+              <line x1="130" y1="75" x2="50" y2="32" stroke="#D8DCE8" stroke-width="1.5"/><line x1="130" y1="75" x2="215" y2="32" stroke="#D8DCE8" stroke-width="1.5"/><line x1="130" y1="75" x2="42" y2="118" stroke="#D8DCE8" stroke-width="1.5"/><line x1="130" y1="75" x2="220" y2="118" stroke="#D8DCE8" stroke-width="1.5"/>
+              <circle cx="130" cy="75" r="20" fill="#F2EEFE" stroke="#6D49E0" stroke-width="1.5"/><text x="130" y="79" text-anchor="middle" font-size="9" fill="#6D49E0">CASE</text>
+              <circle cx="50" cy="32" r="14" fill="#fff" stroke="#E4DBFB" stroke-width="1.5"/><text x="50" y="35" text-anchor="middle" font-size="8" fill="#6D49E0">RP-01</text>
+              <circle cx="215" cy="32" r="14" fill="#fff" stroke="#E4DBFB" stroke-width="1.5"/><text x="215" y="35" text-anchor="middle" font-size="8" fill="#6D49E0">AP-02</text>
+              <circle cx="42" cy="118" r="14" fill="#fff" stroke="#F6CFCF" stroke-width="1.5"/><text x="42" y="121" text-anchor="middle" font-size="8" fill="#DC2626">vendor</text>
+              <circle cx="220" cy="118" r="14" fill="#fff" stroke="#BBD3F6" stroke-width="1.5"/><text x="220" y="121" text-anchor="middle" font-size="8" fill="#2563EB">hist</text>
+            </svg>
+          </div>
+          <div class="card pad"><b style="font-weight:600">Version history</b>
+            <div style="font-size:11.5px;color:var(--tx2);display:flex;flex-direction:column;gap:7px;margin-top:9px">
+              <div class="row" style="gap:8px"><span class="mono lbl">v3</span> Evidence pack assembled <span class="lbl" style="margin-left:auto">now</span></div>
+              <div class="row" style="gap:8px"><span class="mono lbl">v2</span> Vendor master re-queried <span class="lbl" style="margin-left:auto">10:41</span></div>
+              <div class="row" style="gap:8px"><span class="mono lbl">v1</span> Policies retrieved (RAG) <span class="lbl" style="margin-left:auto">10:41</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VERIFICATION -->
+    <section class="screen" id="s-verification">
+      <div class="h"><div><div class="ttl">Verifier · grounding checks</div><div class="lbl mono">CASE-0007 · adjudication review</div></div><span class="chip" style="background:var(--grns);color:var(--grnt);border:1px solid var(--grnb)"><i class="ti ti-circle-check"></i> All checks passed</span></div>
+      <div class="card pad" style="margin-bottom:12px;display:flex;gap:18px;font-size:12px;color:var(--tx2)"><span><span style="color:var(--grnt)">●</span> 4 grounded</span><span><span style="color:var(--redt)">●</span> 0 unsupported</span><span><span style="color:var(--tx3)">●</span> 0 missing</span><span class="lbl mono" style="margin-left:auto">round 1 · no revision</span></div>
+      <div class="card" style="overflow:hidden" id="veriflist"></div>
+      <div class="card pad" style="margin-top:12px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx2)"><i class="ti ti-shield-check" style="color:var(--grnt);font-size:16px"></i> 4 of 4 claims grounded — verified, proceeding to confidence gate.<button class="btn ok" style="margin-left:auto" onclick="go('review')">Merge verdict</button></div>
+    </section>
+
+    <!-- REVIEW -->
+    <section class="screen" id="s-review">
+      <div class="h"><div><div class="ttl">Human review</div><div class="lbl mono">routed to partner · paused via interrupt()</div></div><span class="chip" style="background:var(--ambs);color:var(--ambt);border:1px solid var(--ambb)"><i class="ti ti-clock"></i> Awaiting decision</span></div>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card pad"><b style="font-weight:600">Case at a glance</b>
+            <div style="font-size:12px;color:var(--tx2);display:flex;flex-direction:column;gap:7px;margin-top:9px">
+              <div class="row"><span class="lbl">Vendor</span><span style="margin-left:auto;color:var(--tx)">Mehta Family Holdings</span></div>
+              <div class="row"><span class="lbl">Amount</span><span class="mono" style="margin-left:auto">$58,000</span></div>
+              <div class="row"><span class="lbl">Verdict</span><span style="margin-left:auto;color:var(--redt)">High · 0.86</span></div>
+              <div class="row"><span class="lbl">Verifier</span><span style="margin-left:auto;color:var(--grnt)">4/4 grounded</span></div>
+            </div>
+            <div class="row" style="gap:7px;margin-top:11px"><button class="btn" onclick="go('debate')"><i class="ti ti-messages"></i> Debate</button><button class="btn" onclick="go('evidence')"><i class="ti ti-files"></i> Evidence</button></div>
+          </div>
+          <div class="card pad"><b style="font-weight:600">Activity</b>
+            <div style="position:relative;padding-left:14px;font-size:11.5px;color:var(--tx2);display:flex;flex-direction:column;gap:10px;margin-top:9px">
+              <div style="position:absolute;left:3px;top:4px;bottom:4px;width:1.5px;background:var(--bd2)"></div>
+              <div><span style="position:absolute;left:0;width:7px;height:7px;border-radius:50%;background:var(--pu)"></span>AI verdict produced <span class="lbl">· 10:42</span></div>
+              <div><span style="position:absolute;left:0;width:7px;height:7px;border-radius:50%;background:var(--blu)"></span>Verifier passed (4/4) <span class="lbl">· 10:42</span></div>
+              <div><span style="position:absolute;left:0;width:7px;height:7px;border-radius:50%;background:var(--amb)"></span>Escalated to partner <span class="lbl">· 10:43</span></div>
+              <div><span style="position:absolute;left:0;width:7px;height:7px;border-radius:50%;background:var(--bd2)"></span>Awaiting a.sharma <span class="lbl">· now</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card pad">
+          <div class="row" style="gap:9px;margin-bottom:12px"><div class="avatar" style="background:var(--blus);color:var(--blut);width:32px;height:32px">AS</div><div style="font-size:12.5px"><div>a.sharma <span class="lbl">· Engagement Partner</span></div><div class="lbl">segregation of duties enforced</div></div></div>
+          <div class="lbl" style="margin-bottom:6px">Decision</div>
+          <button class="btn ok" style="width:100%;justify-content:center;margin-bottom:7px"><i class="ti ti-check"></i> Approve</button>
+          <div class="row" style="gap:7px;margin-bottom:12px"><button class="btn" style="flex:1;justify-content:center;border-color:var(--redb);color:var(--redt)">Reject</button><button class="btn" style="flex:1;justify-content:center;border-color:var(--ambb);color:var(--ambt)">Request evidence</button></div>
+          <div class="lbl" style="margin-bottom:5px">Comment</div>
+          <div style="border:1px solid var(--bd2);border-radius:8px;padding:9px;font-size:12px;min-height:48px;background:#FCFCFE">Hold payment. Obtain signed contract + independent approval + related-party disclosure before reliance.</div>
+          <div class="row" style="justify-content:space-between;margin-top:11px;padding-top:11px;border-top:1px solid var(--soft)"><span style="font-size:11.5px;color:var(--tx2)"><i class="ti ti-signature" style="color:var(--pu);font-size:15px;vertical-align:-3px"></i> Signature <span class="mono lbl">sha256:9f2c…e71</span></span><button class="btn pri">Sign &amp; resume</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPLAY -->
+    <section class="screen" id="s-replay">
+      <div class="h"><div><div class="ttl">Investigation replay</div><div class="lbl mono">CASE-0007 · 11 steps · 00:06.4 total</div></div><span class="chip" style="background:var(--pus);color:var(--pu);border:1px solid var(--pub)"><i class="ti ti-lock"></i> Immutable audit log</span></div>
+      <div class="card pad" style="margin-bottom:12px">
+        <div class="row" style="gap:12px;margin-bottom:13px"><span class="nic" style="background:var(--pu);color:#fff;width:34px;height:34px"><i class="ti ti-player-pause" style="font-size:17px"></i></span><i class="ti ti-player-skip-back" style="font-size:18px;color:var(--tx2)"></i><i class="ti ti-player-skip-forward" style="font-size:18px;color:var(--tx2)"></i><span class="mono" style="font-size:12.5px">00:04.1 <span class="lbl">/ 00:06.4</span></span><span class="row" style="gap:6px;margin-left:auto;font-size:11px"><span class="lbl">Speed</span><span class="btn" style="padding:2px 7px">1×</span><span class="chip" style="background:var(--pus);color:var(--pu);border:1px solid var(--pub)">2×</span><span class="btn" style="padding:2px 7px">4×</span></span></div>
+        <div style="position:relative;height:8px;border-radius:5px;display:flex;overflow:hidden;background:var(--soft)"><div style="width:18%;background:#C7BCF6"></div><div style="width:14%;background:#9FE1CB"></div><div style="width:26%;background:#F2C0C0"></div><div style="width:14%;background:#C7BCF6"></div><div style="width:12%;background:#BBD3F6"></div><div style="width:16%;background:#F4DCA6"></div><div style="position:absolute;left:64%;top:-3px;width:3px;height:14px;border-radius:2px;background:var(--tx)" class="pulse"></div></div>
+        <div class="row" style="justify-content:space-between;margin-top:7px;font-size:10.5px;color:var(--tx3)"><span>Plan</span><span>Evidence</span><span>Debate</span><span>Adjudicate</span><span>Verify</span><span>Human</span></div>
+      </div>
+      <div class="card" style="overflow:hidden" id="replaylist"></div>
+    </section>
+
+    <!-- AUDIT LOG -->
+    <section class="screen" id="s-audit">
+      <div class="h"><div><div class="ttl">Audit log</div><div class="lbl">append-only · hash-chained · tamper-evident — every agent action &amp; human decision</div></div>
+      <div class="row"><button class="btn"><i class="ti ti-filter"></i> Filter</button><button class="btn"><i class="ti ti-download"></i> Export</button><span class="chip" style="background:var(--grns);color:var(--grnt);border:1px solid var(--grnb)"><i class="ti ti-shield-check"></i> chain verified</span></div></div>
+      <div class="row" style="gap:6px;margin-bottom:12px;font-size:11.5px"><span class="chip" style="background:var(--pus);color:var(--pu);border:1px solid var(--pub)">CASE-0007</span><span class="chip btn">All cases</span><span class="chip btn">Agent events</span><span class="chip btn">Human decisions</span></div>
+      <div class="card" style="overflow:hidden">
+        <div class="tablerow lbl" style="grid-template-columns:78px 160px 1.5fr 130px 96px;font-size:11px;cursor:default"><span>Time</span><span>Event</span><span>Detail</span><span>Actor</span><span>Hash</span></div>
+        <div id="auditlist"></div>
+      </div>
+      <div class="card pad" style="margin-top:12px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx2)"><i class="ti ti-lock" style="color:var(--pu);font-size:16px"></i> Each row stores <span class="mono" style="margin:0 4px">hash = sha256(hash_prev + payload)</span> — altering any entry breaks the chain.</div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="screen" id="s-reports">
+      <div class="h"><div><div class="ttl">Case report</div><div class="lbl mono">CASE-0007 · v1 · generated 2026-06-25</div></div>
+      <div class="row"><button class="btn"><i class="ti ti-printer"></i> Print</button><button class="btn"><i class="ti ti-download"></i> Download</button><button class="btn pri"><i class="ti ti-file-export"></i> Export PDF</button></div></div>
+      <div class="grid" style="grid-template-columns:88px 1fr">
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="background:var(--pu);border-radius:7px;aspect-ratio:.77;border:1px solid #5B3FD0"></div><div class="lbl" style="text-align:center;color:var(--pu)">Page 1</div>
+          <div style="background:#fff;border:1px solid var(--bd2);border-radius:7px;aspect-ratio:.77"></div><div class="lbl" style="text-align:center">Page 2</div>
+          <div style="background:#fff;border:1px solid var(--bd2);border-radius:7px;aspect-ratio:.77"></div><div class="lbl" style="text-align:center">Audit</div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 2px 10px rgba(17,24,39,.06);padding:22px 24px">
+          <div class="row" style="justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--tx);padding-bottom:10px;margin-bottom:14px"><div><div style="font-size:15px;font-weight:600">Investigation Report</div><div class="lbl">Professional-Skepticism Engine</div></div><div style="text-align:right"><span class="badge b-high">High risk</span><div class="lbl mono" style="margin-top:4px">CASE-0007</div></div></div>
+          <div style="border-left:3px solid var(--pu);padding-left:10px;margin-bottom:13px"><div style="font-size:12px;font-weight:600;color:var(--pu)">Executive summary</div><div style="font-size:11.5px;color:var(--tx2);line-height:1.5;margin-top:3px">A $58,000 consulting payment to a related party (director J. Mehta), 4.1σ above the account norm, vendor absent from the approved master. Recommend investigation before reliance.</div></div>
+          <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:13px">
+            <div style="border-left:3px solid var(--pu);padding-left:10px"><div style="font-size:12px;font-weight:600;color:var(--pu)">Risk &amp; confidence</div><div style="font-size:10.5px;color:var(--tx2);margin-top:3px">Risk High · Conf 0.86 · Investigate</div></div>
+            <div style="border-left:3px solid var(--pu);padding-left:10px"><div style="font-size:12px;font-weight:600;color:var(--pu)">Verification</div><div style="font-size:10.5px;color:var(--tx2);margin-top:3px">4/4 grounded · 1 round · a.sharma</div></div>
+          </div>
+          <div style="border-left:3px solid var(--grn);padding-left:10px"><div style="font-size:12px;font-weight:600;color:var(--grnt)">Decision &amp; audit trail</div><div style="font-size:11.5px;color:var(--tx2);margin-top:3px">Partner held payment pending contract, approval, and disclosure. Signed <span class="mono">sha256:9f2c…e71</span> · 2026-06-25.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="screen" id="s-analytics">
+      <div class="h"><div><div class="ttl">Analytics</div><div class="lbl mono">engagement performance · last 6 weeks</div></div><button class="btn"><i class="ti ti-calendar"></i> 6 weeks</button></div>
+      <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px">
+        <div class="card pad"><div class="lbl">False positives</div><div class="kpi">6.2%</div><div style="font-size:11.5px;color:var(--grnt)"><i class="ti ti-trending-down"></i> -2.1 vs single-prompt</div></div>
+        <div class="card pad"><div class="lbl">False negatives</div><div class="kpi">1.8%</div><div style="font-size:11.5px;color:var(--grnt)"><i class="ti ti-trending-down"></i> -0.6</div></div>
+        <div class="card pad"><div class="lbl">Human review rate</div><div class="kpi">41%</div><div class="lbl" style="font-size:11.5px">59% auto-cleared</div></div>
+        <div class="card pad"><div class="lbl">Model cost / case</div><div class="kpi">$0.21</div><div class="lbl mono" style="font-size:11.5px">Sonnet+Haiku</div></div>
+      </div>
+      <div class="grid" style="grid-template-columns:1.3fr 1fr">
+        <div class="card pad"><b style="font-weight:600">Confidence &amp; verifier trend</b>
+          <div class="row" style="gap:14px;margin:8px 0;font-size:11.5px;color:var(--tx2)"><span class="row" style="gap:5px"><span style="width:14px;height:3px;background:var(--puf);border-radius:2px"></span>Confidence</span><span class="row" style="gap:5px"><span style="width:14px;border-top:2px dashed var(--grn)"></span>Verifier %</span></div>
+          <div style="position:relative;width:100%;height:200px"><canvas id="trend" role="img" aria-label="Confidence and verifier pass rate rising over six weeks"></canvas></div>
+        </div>
+        <div class="card pad"><b style="font-weight:600">Agent accuracy</b>
+          <div style="position:relative;width:100%;height:200px;margin-top:8px"><canvas id="acc" role="img" aria-label="Agent precision bars: Verifier 98, Adjudicator 94, Challenger 91, Defender 89 percent"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EVALUATION (A/B) -->
+    <section class="screen" id="s-eval">
+      <div class="h"><div><div class="ttl">A/B evaluation</div><div class="lbl">multi-agent crew vs single-prompt baseline · 50 labelled cases — proving the uplift (PRD G2)</div></div>
+      <div class="row"><button class="btn"><i class="ti ti-refresh"></i> Re-run eval</button><button class="btn pri"><i class="ti ti-file-export"></i> Export results</button></div></div>
+      <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px">
+        <div class="card pad"><div class="lbl">FP reduction</div><div class="kpi" style="color:var(--grnt)">&minus;22%</div><div class="lbl" style="font-size:11.5px">target &ge; 20% ✓</div></div>
+        <div class="card pad"><div class="lbl">Hallucination catch</div><div class="kpi">84%</div><div class="lbl" style="font-size:11.5px">target &ge; 80% ✓</div></div>
+        <div class="card pad"><div class="lbl">Grounding rate</div><div class="kpi">96%</div><div class="lbl" style="font-size:11.5px">target &ge; 95% ✓</div></div>
+        <div class="card pad"><div class="lbl">Auto-clear rate</div><div class="kpi">42%</div><div class="lbl" style="font-size:11.5px">in 30–50% band ✓</div></div>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div class="card pad"><b style="font-weight:600">Single-prompt vs crew</b>
+          <div style="overflow:hidden;margin-top:8px" id="evalcmp"></div>
+        </div>
+        <div class="card pad"><b style="font-weight:600">Verifier — seeded hallucination test</b>
+          <div class="lbl" style="margin:2px 0 10px">25 ungrounded claims injected into adjudications</div>
+          <div id="evalbars"></div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--soft);font-size:12px;color:var(--tx2)">21 of 25 caught and sent back for revision — <span style="color:var(--grnt)">84% catch rate</span>. The single-prompt baseline catches 0 (it cannot check itself).</div>
+        </div>
+      </div>
+      <div class="card pad" style="margin-top:12px;border-left:3px solid var(--pu)"><b style="font-weight:600;color:var(--pu)">Conclusion · each agent earns its place</b><div style="font-size:12px;color:var(--tx2);margin-top:4px">The crew reduces false positives by 22 points and catches 84% of injected hallucinations the single pass misses. Ablation: removing the Defender raises FP by 11 pts; removing the Verifier drops hallucination-catch to 0.</div></div>
+    </section>
+
+    <!-- KNOWLEDGE -->
+    <section class="screen" id="s-knowledge">
+      <div class="h"><div><div class="ttl">Knowledge base</div><div class="lbl">policies &amp; reference grounding the agents · re-index to update</div></div><button class="btn pri"><i class="ti ti-upload"></i> Add source</button></div>
+      <div class="grid" style="grid-template-columns:repeat(3,1fr)" id="kblist"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="screen" id="s-settings">
+      <div class="h"><div><div class="ttl">Settings</div><div class="lbl">workspace configuration · Team 01</div></div><button class="btn pri">Save changes</button></div>
+      <div class="grid" style="grid-template-columns:160px 1fr">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div class="nav on"><i class="ti ti-cpu"></i> Models</div><div class="nav"><i class="ti ti-adjustments"></i> Thresholds</div><div class="nav"><i class="ti ti-coin"></i> Materiality</div><div class="nav"><i class="ti ti-book-2"></i> Knowledge base</div><div class="nav"><i class="ti ti-key"></i> API keys</div><div class="nav"><i class="ti ti-shield-lock"></i> Security</div><div class="nav"><i class="ti ti-palette"></i> Theme</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card pad"><b style="font-weight:600">Models</b><div class="lbl" style="margin:2px 0 8px">A model per agent role</div>
+            <div class="row" style="justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--soft)"><span style="font-size:12.5px">Reasoning agents</span><span class="btn">claude-sonnet-4-6 <i class="ti ti-chevron-down"></i></span></div>
+            <div class="row" style="justify-content:space-between;padding:10px 0"><span style="font-size:12.5px">Report generation</span><span class="btn">claude-haiku <i class="ti ti-chevron-down"></i></span></div>
+          </div>
+          <div class="card pad"><b style="font-weight:600">Confidence thresholds</b>
+            <div style="margin:10px 0 12px"><div class="row" style="justify-content:space-between;font-size:12px;margin-bottom:6px"><span>Auto-clear ≥</span><span class="mono" style="color:var(--grnt)">0.90</span></div><div style="height:6px;border-radius:4px;background:var(--soft);position:relative"><div style="height:6px;width:90%;border-radius:4px;background:var(--grn)"></div><div style="width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--grn);position:absolute;top:-4px;left:calc(90% - 7px)"></div></div></div>
+            <div><div class="row" style="justify-content:space-between;font-size:12px;margin-bottom:6px"><span>Reviewer ≥</span><span class="mono" style="color:var(--ambt)">0.70</span></div><div style="height:6px;border-radius:4px;background:var(--soft);position:relative"><div style="height:6px;width:70%;border-radius:4px;background:var(--amb)"></div><div style="width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--amb);position:absolute;top:-4px;left:calc(70% - 7px)"></div></div></div>
+          </div>
+          <div class="grid" style="grid-template-columns:1fr 1fr">
+            <div class="card pad"><b style="font-weight:600">Materiality</b><div class="lbl" style="margin:2px 0 6px">Partner review at</div><div class="row" style="border:1px solid var(--bd2);border-radius:8px;padding:8px 11px"><span class="lbl">USD</span><span class="mono" style="margin-left:8px;font-size:14px">25,000</span></div></div>
+            <div class="card pad"><b style="font-weight:600">Security</b>
+              <div class="row" style="justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--soft)"><span style="font-size:12px">Segregation of duties</span><span style="width:34px;height:19px;border-radius:99px;background:var(--pu);position:relative"><span style="width:15px;height:15px;border-radius:50%;background:#fff;position:absolute;top:2px;right:2px"></span></span></div>
+              <div class="row" style="justify-content:space-between;padding:10px 0"><span style="font-size:12px">Immutable audit log</span><span style="width:34px;height:19px;border-radius:99px;background:var(--pu);position:relative"><span style="width:15px;height:15px;border-radius:50%;background:#fff;position:absolute;top:2px;right:2px"></span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const titles={dashboard:'Dashboard',intake:'Case intake',investigations:'Investigations',workspace:'Workspace · CASE-0007',debate:'Debate viewer',evidence:'Evidence explorer',verification:'Verification',review:'Human review',replay:'Replay',audit:'Audit log',reports:'Reports',analytics:'Analytics',eval:'A/B evaluation',knowledge:'Knowledge base',settings:'Settings'};
+let chartsDone=false;
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  document.querySelectorAll('.side .nav[data-s]').forEach(n=>n.classList.toggle('on',n.dataset.s===id));
+  document.getElementById('crumb').textContent=titles[id]||id;
+  document.querySelector('.content').scrollTop=0;
+  if(id==='analytics'&&!chartsDone){chartsDone=true;initCharts();}
+}
+document.querySelectorAll('.side .nav[data-s]').forEach(n=>n.addEventListener('click',()=>go(n.dataset.s)));
+
+// risk bars
+document.getElementById('riskbars').innerHTML=[['High',13,14,'#EF4444'],['Medium',27,28,'#F59E0B'],['Low',55,58,'#10B981']].map(([k,v,w,c])=>
+ `<div style="margin-bottom:9px"><div class="row" style="justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--tx2)">${k}</span><span class="mono">${v}</span></div><div style="height:7px;border-radius:4px;background:var(--soft)"><div style="height:7px;border-radius:4px;width:${w}%;background:${c}"></div></div></div>`).join('');
+
+// investigations list
+const inv=[['CASE-0007','Mehta Family Holdings','Consulting','$58,000','0.86','related party, outlier','High','b-high'],
+['CASE-0042','SkyHigh Travel','T&E','$6,800','0.93','off-market FX, weekend','Medium','b-med'],
+['CASE-0019','Vertex Consultants','Consulting','$25,000','0.74','round dollar','Medium','b-med'],
+['CASE-0031','Reliance Power','Utilities','$15,000','0.81','round + outlier','High','b-high'],
+['CASE-0051','Staples Inc','Office','$312','0.97','none material','Cleared','b-low'],
+['CASE-0063','Lenovo','IT Equipment','$3,200','0.95','possible duplicate','Low','b-low'],
+['CASE-0077','AdReach Media','Marketing','$4,999','0.78','just-below threshold','Medium','b-med']];
+document.getElementById('invlist').innerHTML=inv.map(r=>`<div class="tablerow" style="grid-template-columns:96px 1.5fr 100px 70px 1fr 90px" onclick="go('workspace')"><span class="mono" style="color:var(--tx2)">${r[0]}</span><span>${r[1]} <span class="lbl">· ${r[2]}</span></span><span class="mono">${r[3]}</span><span class="mono" style="color:${r[6]==='Cleared'||r[6]==='Low'?'var(--grnt)':r[6]==='High'?'var(--redt)':'var(--ambt)'}">${r[4]}</span><span class="lbl">${r[5]}</span><span><span class="badge ${r[7]}">${r[6]}</span></span></div>`).join('');
+
+// pipeline
+const pipe=[['ti-check','Supervisor','routed · 2 rounds max','done','120ms'],['ti-check','Evidence agent','5 sources · 8 citations','done','240ms'],['ti-swords','Challenger','5 red flags raised','chal','1.1s'],['ti-shield-half','Defender','conf. 0.25 legit','done','1.0s'],['ti-gavel','Adjudicator','running','run','~1.4s'],['ti-checkup-list','Verifier · QA','queued','idle',''],['ti-route','Confidence gate','idle','idle',''],['ti-user-check','Human review','idle','idle','']];
+document.getElementById('pipeline').innerHTML=pipe.map(p=>{
+ let ic=p[3]==='done'?'background:var(--grns);color:var(--grnt)':p[3]==='chal'?'background:var(--reds);color:var(--redt)':p[3]==='run'?'background:var(--pus);color:var(--pu)':'background:var(--soft);color:var(--tx3)';
+ if(p[3]==='run')return `<div class="nrow" style="background:#F7F4FE;border:1px solid var(--pub)"><div class="nic" style="${ic}"><i class="ti ${p[0]}"></i></div><div style="flex:1"><div style="font-size:12.5px;color:#5B3FD0">${p[1]} <span style="color:var(--pu)">running</span></div><div class="bar" style="margin-top:6px"><i class="gw" style="width:50%"></i></div></div><span class="lbl mono" style="margin-left:auto">${p[4]}</span></div>`;
+ return `<div class="nrow"><div class="nic" style="${ic}"><i class="ti ${p[0]}"></i></div><div><div style="font-size:12.5px;${p[3]==='idle'?'color:var(--tx2)':''}">${p[1]}</div><div class="lbl">${p[2]}</div></div>${p[4]?`<span class="lbl" style="margin-left:auto">${p[4]}</span>`:''}</div>`;
+}).join('')+`<div class="row" style="gap:14px;padding:8px 11px"><span class="lbl"><i class="ti ti-file-text"></i> Report · idle</span><span class="lbl"><i class="ti ti-lock"></i> Audit · idle</span></div>`;
+
+// evidence list
+const ev=[['ti-book-2','var(--pu)','var(--pus)','Related-party policy','RP-01 §2','ISA 550 review required','v2.1'],['ti-book-2','var(--pu)','var(--pus)','Approval matrix','AP-02 §1','>$25k partner approval','v3.0'],['ti-database','var(--blut)','var(--blus)','Vendor master','not found','absent from approved','live'],['ti-chart-dots','var(--blut)','var(--blus)','Account history','hist','mean $15,126 · z=4.1','whse']];
+document.getElementById('evlist').innerHTML=ev.map((e,i)=>`<div class="nrow" style="border-bottom:${i<ev.length-1?'1px solid #F1F2F7':'none'};border-radius:0;padding:11px 13px"><div class="nic" style="width:28px;height:28px;background:${e[2]};color:${e[1]}"><i class="ti ${e[0]}"></i></div><div style="flex:1"><div style="font-size:12.5px;font-weight:500">${e[3]} <span style="font-size:10px;background:var(--pus);color:var(--pu);border:1px solid var(--pub);border-radius:5px;padding:1px 6px" class="mono">${e[4]}</span></div><div class="lbl" style="margin-top:2px">${e[5]}</div></div><span class="lbl mono">${e[6]}</span></div>`).join('');
+
+// verification list
+const vf=[['Vendor implies a related party to director J. Mehta.','RP-01 §2 + description'],['Amount is 4.1σ above the Consulting mean.','hist:Consulting · mean $15,126'],['Vendor is absent from the approved master.','vendor_master live lookup'],['$58,000 breaches the $25,000 partner threshold.','AP-02 §1']];
+document.getElementById('veriflist').innerHTML=vf.map((v,i)=>`<div style="display:flex;gap:11px;padding:12px 14px;border-bottom:${i<vf.length-1?'1px solid #F1F2F7':'none'}"><span style="width:20px;height:20px;border-radius:50%;background:var(--grns);color:var(--grnt);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px"><i class="ti ti-check"></i></span><div style="flex:1"><div style="font-size:12.5px">${v[0]}</div><div class="lbl" style="margin-top:4px"><i class="ti ti-arrow-back-up"></i> grounded in <span class="mono" style="color:var(--pu)">${v[1]}</span></div></div><span style="font-size:11px;color:var(--grnt);margin-top:1px">grounded</span></div>`).join('');
+
+// replay list
+const rl=[['ti-sitemap','var(--pus)','var(--pu)','Supervisor planned & routed','2 rounds max · materiality $25k','00:00.1','done'],['ti-files','var(--grns)','var(--grnt)','Evidence retrieved — 5 sources','RAG + history + vendor master','00:00.4','done'],['ti-swords','var(--reds)','var(--redt)','Challenger raised 5 red flags','related party · ghost vendor','00:01.5','done'],['ti-shield-half','var(--grns)','var(--grnt)','Defender argued legitimacy (0.25)','isolated from challenger','00:02.5','done'],['ti-gavel','var(--pus)','var(--pu)','Adjudicator decided — High · 0.86','current step','00:04.1','cur'],['ti-checkup-list','var(--soft)','var(--tx3)','Verifier checks grounding','upcoming','00:05.2','idle'],['ti-user-check','var(--soft)','var(--tx3)','Escalated to partner','upcoming','00:06.4','idle']];
+document.getElementById('replaylist').innerHTML=rl.map((r,i)=>`<div style="display:flex;align-items:flex-start;gap:11px;padding:9px 13px;border-bottom:${i<rl.length-1?'1px solid #F1F2F7':'none'};${r[6]==='cur'?'background:#F7F4FE':''}"><div class="nic" style="width:24px;height:24px;background:${r[1]};color:${r[2]}"><i class="ti ${r[0]}"></i></div><div style="flex:1"><div style="font-size:12px;${r[6]==='idle'?'color:var(--tx3)':r[6]==='cur'?'color:#5B3FD0':''}">${r[3]} ${r[6]==='cur'?'<span class="pulse" style="color:var(--pu)">●</span>':''}</div><div class="lbl">${r[4]}</div></div><span class="lbl mono">${r[5]}</span></div>`).join('');
+
+// knowledge base
+const kb=[['ti-checklist','Approval matrices','Authority limits per grade','Finance','12 docs'],['ti-file-description','SOPs','Procurement & close','Methodology','34 docs'],['ti-users','Related-party policy','RP-01 · ISA 550','Methodology','3 docs'],['ti-gavel','Audit standards (ISA)','230 · 240 · 315 · 550','Methodology','8 docs'],['ti-building-store','Vendor master rules','Approved vendor logic','Master Data','live'],['ti-history','Historical workpapers','Prior engagements','Audit','1.2k docs']];
+document.getElementById('kblist').innerHTML=kb.map(k=>`<div class="card pad"><div class="row" style="gap:9px;margin-bottom:8px"><span class="nic" style="background:var(--pus);color:var(--pu)"><i class="ti ${k[0]}"></i></span><b style="font-weight:600;font-size:13px">${k[1]}</b></div><div class="lbl" style="margin-bottom:8px">${k[2]}</div><div class="row" style="justify-content:space-between;font-size:11px;color:var(--tx2)"><span><i class="ti ti-user" style="font-size:12px"></i> ${k[3]}</span><span class="mono lbl">${k[4]}</span></div></div>`).join('');
+
+// intake — rule pre-filter bars
+const rules=[['Materiality ≥ $25k',18,'var(--red)'],['FX outlier',22,'var(--amb)'],['Round-number',14,'var(--amb)'],['Segregation of duties',9,'var(--red)'],['Duplicate',7,'var(--blu)'],['Unknown vendor',11,'var(--red)'],['Off-hours posting',14,'var(--blu)']];
+document.getElementById('rulebars').innerHTML=rules.map(([k,v,c])=>`<div style="margin-bottom:9px"><div class="row" style="justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--tx2)">${k}</span><span class="mono">${v}</span></div><div style="height:7px;border-radius:4px;background:var(--soft)"><div style="height:7px;border-radius:4px;width:${v*4}%;background:${c}"></div></div></div>`).join('');
+const intk=[['TXN-0876','Mehta Family Holdings','Consulting','$58,000','materiality · round · unknown vendor'],['TXN-0003','Brookfield Properties','Rent','$18,702','fx outlier'],['TXN-0311','Vertex Consultants','Consulting','$25,000','materiality · round'],['TXN-0420','Reliance Power','Utilities','$15,000','round · off-hours'],['TXN-0588','AdReach Media','Marketing','$4,999','just-below threshold'],['TXN-0712','DHL Express','Logistics','$9,400','duplicate']];
+document.getElementById('intakelist').innerHTML=intk.map(r=>`<div class="tablerow" style="grid-template-columns:96px 1.4fr 90px 1.3fr" onclick="go('workspace')"><span class="mono" style="color:var(--tx2)">${r[0]}</span><span>${r[1]} <span class="lbl">· ${r[2]}</span></span><span class="mono">${r[3]}</span><span class="lbl">${r[4]}</span></div>`).join('');
+
+// audit log — hash-chained
+const aud=[['10:41.0','case_created','TXN-0876 flagged at intake (3 rules)','intake','9f…a1'],['10:41.3','evidence_assembled','5 sources · 8 citations','evidence','9f…3f'],['10:42.0','challenger_view','5 red flags · severity high','challenger','9f…7c'],['10:42.1','defender_view','legitimacy 0.25 · isolated','defender','9f…b9'],['10:42.3','adjudication_r1','High · 0.86 · 1 unsupported claim','adjudicator','9f…d4'],['10:42.5','verification_fail','caught hallucinated sign-off → revise','verifier','9f…e0'],['10:42.8','adjudication_r2','High · 0.86 · revised, grounded','adjudicator','9f…5a'],['10:42.9','verification_pass','4/4 claims grounded','verifier','9f…2b'],['10:43.0','escalated','≥ materiality $25k → partner','gate','9f…8e'],['11:42.1','review_signed','reject — hold payment','a.sharma (Partner)','9f…e71'],['11:42.2','case_closed','High / investigate before reliance','system','9f…c3']];
+document.getElementById('auditlist').innerHTML=aud.map(a=>{let c=a[1].includes('fail')?'var(--redt)':(a[1].includes('pass')||a[1].includes('closed'))?'var(--grnt)':a[1].includes('escal')?'var(--ambt)':a[1].includes('review')?'var(--blut)':'var(--pu)';return `<div class="tablerow" style="grid-template-columns:78px 160px 1.5fr 130px 96px;cursor:default"><span class="mono lbl">${a[0]}</span><span class="mono" style="color:${c};font-size:11.5px">${a[1]}</span><span style="color:var(--tx2)">${a[2]}</span><span class="lbl">${a[3]}</span><span class="mono lbl">${a[4]}</span></div>`;}).join('');
+
+// eval — comparison + seeded test
+const cmp=[['False-positive rate','28%','6.2%','−22pts'],['False-negative rate','2.4%','1.8%','−0.6pts'],['Grounded citations','—','96%','+96'],['Hallucination catch','0%','84%','+84'],['Cost / case','$0.05','$0.21','+$0.16']];
+document.getElementById('evalcmp').innerHTML=`<div class="tablerow lbl" style="grid-template-columns:1.4fr 1fr 1fr 0.9fr;font-size:11px;cursor:default"><span>Metric</span><span>Single-prompt</span><span>Crew</span><span>Δ</span></div>`+cmp.map(r=>{let g=r[3].includes('−')||r[3].startsWith('+8')||r[3].startsWith('+9');return `<div class="tablerow" style="grid-template-columns:1.4fr 1fr 1fr 0.9fr;cursor:default"><span>${r[0]}</span><span class="mono lbl">${r[1]}</span><span class="mono">${r[2]}</span><span class="mono" style="color:${g?'var(--grnt)':'var(--tx2)'}">${r[3]}</span></div>`;}).join('');
+const eb=[['Caught → revised',21,'var(--grn)'],['Missed',4,'var(--red)']];
+document.getElementById('evalbars').innerHTML=eb.map(([k,v,c])=>`<div style="margin-bottom:9px"><div class="row" style="justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--tx2)">${k}</span><span class="mono">${v}/25</span></div><div style="height:7px;border-radius:4px;background:var(--soft)"><div style="height:7px;border-radius:4px;width:${v/25*100}%;background:${c}"></div></div></div>`).join('');
+
+function initCharts(){
+ const grid='#EEF0F6',tick='#8A93A8';
+ new Chart(document.getElementById('trend'),{type:'line',data:{labels:['W1','W2','W3','W4','W5','W6'],datasets:[{label:'Confidence',data:[0.78,0.80,0.82,0.84,0.86,0.87],borderColor:'#7C5CFF',backgroundColor:'#7C5CFF',tension:.35,pointRadius:3,yAxisID:'y'},{label:'Verifier %',data:[88,90,92,93,95,96],borderColor:'#10B981',borderDash:[5,4],backgroundColor:'#10B981',tension:.35,pointRadius:3,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0.7,max:0.95,grid:{color:grid},ticks:{color:tick,font:{size:10}}},y1:{position:'right',min:80,max:100,grid:{display:false},ticks:{color:tick,font:{size:10}}},x:{grid:{display:false},ticks:{color:tick,font:{size:11}}}}}});
+ new Chart(document.getElementById('acc'),{type:'bar',data:{labels:['Verifier','Adjudicator','Challenger','Defender'],datasets:[{data:[98,94,91,89],backgroundColor:['#3B82F6','#7C5CFF','#EF4444','#10B981'],borderRadius:5,barThickness:18}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:80,max:100,grid:{color:grid},ticks:{color:tick,font:{size:10}}},y:{grid:{display:false},ticks:{color:'#141A2E',font:{size:11}}}}}});
+}
+</script>
+</body>
+</html>

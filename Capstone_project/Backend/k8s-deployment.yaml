@@ -1,0 +1,244 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: skeptic-engine
+
+---
+# ConfigMap for non-sensitive configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skeptic-config
+  namespace: skeptic-engine
+data:
+  ENV: production
+  DEBUG: "false"
+  LOG_LEVEL: INFO
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  API_ROOT_PATH: "/api/v1"
+  MAX_DEBATE_ROUNDS: "2"
+  INVESTIGATION_TIMEOUT_MINUTES: "30"
+  DEFAULT_MATERIALITY_THRESHOLD: "50000"
+  DEFAULT_CONFIDENCE_THRESHOLD: "0.7"
+  DEFAULT_ESCALATION_THRESHOLD: "0.5"
+
+---
+# FastAPI Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skeptic-api
+  namespace: skeptic-engine
+  labels:
+    app: skeptic-api
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: skeptic-api
+  template:
+    metadata:
+      labels:
+        app: skeptic-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+    spec:
+      serviceAccountName: skeptic-api
+      containers:
+      - name: api
+        image: skeptic-engine/api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        envFrom:
+        - configMapRef:
+            name: skeptic-config
+        - secretRef:
+            name: skeptic-secrets
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://skeptic:$(DATABASE_PASSWORD)@postgres:5432/skeptic_engine"
+        - name: REDIS_URL
+          value: "redis://redis:6379/0"
+        - name: CELERY_BROKER_URL
+          value: "redis://redis:6379/1"
+        - name: CELERY_RESULT_BACKEND
+          value: "redis://redis:6379/2"
+        - name: EVENTSTORE_URL
+          value: "esdb://eventstore:1113?tls=false"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/detailed
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+
+---
+# FastAPI Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: skeptic-api
+  namespace: skeptic-engine
+  labels:
+    app: skeptic-api
+spec:
+  type: LoadBalancer
+  selector:
+    app: skeptic-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+    name: http
+  sessionAffinity: None
+
+---
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: skeptic-api
+  namespace: skeptic-engine
+
+---
+# Celery Worker Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skeptic-worker
+  namespace: skeptic-engine
+  labels:
+    app: skeptic-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: skeptic-worker
+  template:
+    metadata:
+      labels:
+        app: skeptic-worker
+    spec:
+      containers:
+      - name: worker
+        image: skeptic-engine/api:latest
+        imagePullPolicy: Always
+        command:
+        - celery
+        - -A
+        - celery_config
+        - worker
+        - --loglevel=info
+        - --concurrency=4
+        envFrom:
+        - configMapRef:
+            name: skeptic-config
+        - secretRef:
+            name: skeptic-secrets
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://skeptic:$(DATABASE_PASSWORD)@postgres:5432/skeptic_engine"
+        - name: REDIS_URL
+          value: "redis://redis:6379/0"
+        - name: CELERY_BROKER_URL
+          value: "redis://redis:6379/1"
+        - name: CELERY_RESULT_BACKEND
+          value: "redis://redis:6379/2"
+        - name: EVENTSTORE_URL
+          value: "esdb://eventstore:1113?tls=false"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1000m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+
+---
+# HorizontalPodAutoscaler for API
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: skeptic-api-hpa
+  namespace: skeptic-engine
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: skeptic-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# HorizontalPodAutoscaler for Workers
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: skeptic-worker-hpa
+  namespace: skeptic-engine
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: skeptic-worker
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75

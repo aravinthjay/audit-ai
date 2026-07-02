@@ -1,0 +1,196 @@
+{
+  "sources": [
+    {
+      "id": "kb-approval-matrix",
+      "title": "Delegated Approval Matrix",
+      "description": "Spend authority limits by role, entity, and account class.",
+      "owner": "Controllership",
+      "status": "synced",
+      "freshness": "Updated 2026-06-24",
+      "version_history": ["v4.2 (current)", "v4.1", "v4.0"],
+      "embedding_status": "indexed"
+    },
+    {
+      "id": "kb-vendor-master",
+      "title": "Vendor Master & Onboarding SOP",
+      "description": "Supplier registration, bank-detail verification, purchase-order matching, and master-data controls.",
+      "owner": "Procurement",
+      "status": "synced",
+      "freshness": "Updated 2026-06-21",
+      "version_history": ["v2.3 (current)", "v2.2", "v2.1"],
+      "embedding_status": "indexed"
+    },
+    {
+      "id": "kb-related-party",
+      "title": "Related-Party Transaction Policy",
+      "description": "Identification, disclosure, approval, and audit review rules for related-party transactions.",
+      "owner": "Risk & Compliance",
+      "status": "synced",
+      "freshness": "Updated 2026-06-16",
+      "version_history": ["v3.0 (current)", "v2.6"],
+      "embedding_status": "indexed"
+    },
+    {
+      "id": "kb-travel-expense",
+      "title": "Travel & Expense Reimbursement Policy",
+      "description": "Benchmarking, receipt, route, hotel, meal, taxi, and fuel evidence requirements.",
+      "owner": "Finance Operations",
+      "status": "synced",
+      "freshness": "Updated 2026-06-18",
+      "version_history": ["v5.1 (current)", "v5.0"],
+      "embedding_status": "indexed"
+    },
+    {
+      "id": "kb-expense-sop",
+      "title": "Expense Recognition SOP",
+      "description": "Capitalisation thresholds, period recognition, account mapping, and manual journal controls.",
+      "owner": "Controllership",
+      "status": "review_needed",
+      "freshness": "Updated 2026-05-19",
+      "version_history": ["v1.8 (current)", "v1.7"],
+      "embedding_status": "indexed"
+    },
+    {
+      "id": "kb-sod-controls",
+      "title": "Segregation of Duties Control Standard",
+      "description": "Posting, approval, vendor maintenance, payment release, and override separation rules.",
+      "owner": "Internal Controls",
+      "status": "synced",
+      "freshness": "Updated 2026-06-27",
+      "version_history": ["v2.0 (current)", "v1.9"],
+      "embedding_status": "indexed"
+    },
+    {
+      "id": "kb-sample-ledger",
+      "title": "Sample General Ledger Data Dictionary",
+      "description": "Column definitions, risk hints, and expected evidence fields for uploaded GL data.",
+      "owner": "Data Engineering",
+      "status": "synced",
+      "freshness": "Updated 2026-06-29",
+      "version_history": ["sample-feed-2026-06"],
+      "embedding_status": "indexed"
+    }
+  ],
+  "chunks": [
+    {
+      "id": "approval-matrix-4.2-sec-2.1",
+      "source_id": "kb-approval-matrix",
+      "section": "2.1",
+      "title": "Dual Approval Threshold",
+      "content": "Operating expense payments of 25000 USD or more require dual approval by the business owner and a controller. Payments of 50000 USD or more also require engagement partner review before release.",
+      "keywords": ["approval", "materiality", "threshold", "controller", "partner", "payment"]
+    },
+    {
+      "id": "approval-matrix-4.2-sec-2.4",
+      "source_id": "kb-approval-matrix",
+      "section": "2.4",
+      "title": "Emergency Spend Exception",
+      "content": "Emergency spend may be approved after the fact only when the approver records the business justification, evidence of service delivery, and controller concurrence within five business days.",
+      "keywords": ["emergency", "exception", "approval", "justification", "controller"]
+    },
+    {
+      "id": "vendor-master-2.3-sec-1.2",
+      "source_id": "kb-vendor-master",
+      "section": "1.2",
+      "title": "Supplier Onboarding Evidence",
+      "content": "New suppliers require tax registration validation, sanctions screening, bank-account verification, and an approved purchase order before the first invoice is paid.",
+      "keywords": ["vendor", "supplier", "onboarding", "purchase order", "tax", "bank", "invoice"]
+    },
+    {
+      "id": "vendor-master-2.3-sec-3.3",
+      "source_id": "kb-vendor-master",
+      "section": "3.3",
+      "title": "Vendor Master Change Control",
+      "content": "Vendor bank detail changes must be requested by procurement, verified independently by finance operations, and approved by a controller who did not create the change request.",
+      "keywords": ["vendor", "bank", "change", "segregation", "controller", "procurement"]
+    },
+    {
+      "id": "related-party-3.0-sec-4.1",
+      "source_id": "kb-related-party",
+      "section": "4.1",
+      "title": "Related-Party Identification",
+      "content": "Transactions with vendors sharing common ownership, officers, directors, family relationships, or beneficial owners with company personnel must be flagged for related-party review.",
+      "keywords": ["related party", "ownership", "director", "family", "beneficial owner", "vendor"]
+    },
+    {
+      "id": "related-party-3.0-sec-4.4",
+      "source_id": "kb-related-party",
+      "section": "4.4",
+      "title": "Related-Party Approval",
+      "content": "A related-party transaction cannot be auto-cleared. It requires disclosure evidence, independent pricing support, and approval by the audit partner or equivalent governance owner.",
+      "keywords": ["related party", "auto-clear", "pricing", "disclosure", "partner"]
+    },
+    {
+      "id": "travel-expense-5.1-sec-2.2",
+      "source_id": "kb-travel-expense",
+      "section": "2.2",
+      "title": "Airfare Benchmarking",
+      "content": "Flight reimbursement claims must include route, travel date, passenger name, invoice or ticket number, and a third-party fare benchmark. Claims outside 25 percent of benchmark require manual review.",
+      "keywords": ["flight", "airfare", "travel", "route", "ticket", "benchmark", "manual review"]
+    },
+    {
+      "id": "travel-expense-5.1-sec-2.5",
+      "source_id": "kb-travel-expense",
+      "section": "2.5",
+      "title": "Hotel and Meal Limits",
+      "content": "Hotel claims require city, check-in date, check-out date, invoice, and market benchmark support. Meal claims above local per-diem or missing itemized receipt evidence must be reviewed manually.",
+      "keywords": ["hotel", "meal", "food", "per-diem", "receipt", "benchmark", "city"]
+    },
+    {
+      "id": "travel-expense-5.1-sec-2.8",
+      "source_id": "kb-travel-expense",
+      "section": "2.8",
+      "title": "Taxi and Fuel Evidence",
+      "content": "Taxi claims require pickup, drop location, distance or provider receipt, and fare benchmark. Fuel claims require quantity, location, invoice date, and reference fuel price for the service date.",
+      "keywords": ["taxi", "cab", "fuel", "distance", "quantity", "receipt", "benchmark"]
+    },
+    {
+      "id": "expense-sop-1.8-sec-3.1",
+      "source_id": "kb-expense-sop",
+      "section": "3.1",
+      "title": "Period Recognition",
+      "content": "Consulting and professional-service expenses are recognized in the period services are rendered. Unusual late postings, round-number invoices, or missing service period evidence require follow-up.",
+      "keywords": ["consulting", "professional services", "period", "round-number", "invoice", "late posting"]
+    },
+    {
+      "id": "expense-sop-1.8-sec-5.2",
+      "source_id": "kb-expense-sop",
+      "section": "5.2",
+      "title": "Capitalisation Review",
+      "content": "Software, equipment, and implementation costs above 50000 USD require assessment against capitalisation criteria. Ambiguous account mapping must be routed to controllership review.",
+      "keywords": ["software", "equipment", "capitalisation", "account mapping", "controllership"]
+    },
+    {
+      "id": "sod-controls-2.0-sec-1.1",
+      "source_id": "kb-sod-controls",
+      "section": "1.1",
+      "title": "Posting and Approval Separation",
+      "content": "The employee who creates or posts a journal entry cannot be the final approver for the same transaction. System, admin, or service-account postings require named business-owner attestation.",
+      "keywords": ["segregation", "duties", "journal", "admin", "system", "approver", "posting"]
+    },
+    {
+      "id": "sod-controls-2.0-sec-2.3",
+      "source_id": "kb-sod-controls",
+      "section": "2.3",
+      "title": "Manual Override Review",
+      "content": "Manual overrides to approval workflow, vendor validation, payment block, or evidence requirements must be logged with reason code, actor, timestamp, and independent reviewer sign-off.",
+      "keywords": ["override", "approval workflow", "vendor validation", "payment block", "reviewer"]
+    },
+    {
+      "id": "sample-ledger-2026-sec-1.1",
+      "source_id": "kb-sample-ledger",
+      "section": "1.1",
+      "title": "Ledger Field Expectations",
+      "content": "The sample general ledger uses transaction_id, posted_at, vendor_name, category, amount, currency, fx_rate_used, posted_by, approver, purchase_order, invoice_id, and risk_hint fields.",
+      "keywords": ["ledger", "transaction_id", "vendor_name", "category", "amount", "posted_by", "purchase_order"]
+    },
+    {
+      "id": "sample-ledger-2026-sec-1.3",
+      "source_id": "kb-sample-ledger",
+      "section": "1.3",
+      "title": "Risk Hint Semantics",
+      "content": "Risk hints such as materiality, duplicate, unknown_vendor, off_hours, fx_outlier, and segregation_of_duties are prefilter signals. They are not final conclusions without supporting evidence.",
+      "keywords": ["risk_hint", "materiality", "duplicate", "unknown_vendor", "off_hours", "fx_outlier"]
+    }
+  ]
+}

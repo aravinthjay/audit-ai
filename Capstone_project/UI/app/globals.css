@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 224 37% 13%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 37% 13%;
+  --border: 220 25% 90%;
+  --input: 220 24% 86%;
+  --ring: 221 83% 53%;
+  --muted: 220 33% 97%;
+  --muted-foreground: 220 10% 46%;
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
+  --primary-soft: 217 100% 97%;
+  --primary-border: 217 91% 90%;
+  --success: 160 84% 39%;
+  --success-foreground: 158 94% 24%;
+  --success-soft: 153 47% 93%;
+  --success-border: 151 52% 83%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 30 90% 35%;
+  --warning-soft: 39 88% 93%;
+  --warning-border: 40 77% 80%;
+  --danger: 0 84% 60%;
+  --danger-foreground: 0 72% 51%;
+  --danger-soft: 0 67% 95%;
+  --danger-border: 0 69% 89%;
+  --info: 217 91% 60%;
+  --info-foreground: 221 83% 53%;
+  --info-soft: 217 78% 95%;
+  --info-border: 217 69% 85%;
+  --radius: 0.75rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+}
+
+body {
+  min-height: 100vh;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .mono {
+    font-family: theme("fontFamily.mono");
+  }
+
+  .animate-surface-in {
+    animation: surface-in 180ms ease-out both;
+  }
+
+  .shadow-focus {
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.14);
+  }
+}
+
+@keyframes surface-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
