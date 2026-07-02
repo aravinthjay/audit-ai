@@ -6,9 +6,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Literal, Protocol
 
-ProviderName = Literal["anthropic", "groq", "openai"]
+ProviderName = Literal["anthropic", "groq", "openai", "gemini", "deepseek"]
 LLMComplexity = Literal["simple", "standard", "complex", "critical"]
-PROVIDER_NAMES: tuple[ProviderName, ...] = ("anthropic", "groq", "openai")
+PROVIDER_NAMES: tuple[ProviderName, ...] = ("anthropic", "groq", "openai", "gemini", "deepseek")
 
 
 class LLMFailureKind(str, Enum):
@@ -18,12 +18,16 @@ class LLMFailureKind(str, Enum):
     CONTEXT_LENGTH = "context_length"
     TIMEOUT = "timeout"
     QUOTA = "quota"
+    MODEL_NOT_FOUND = "model_not_found"
+    AUTH = "auth"
     PROVIDER_ERROR = "provider_error"
     NETWORK = "network"
     UNKNOWN = "unknown"
 
 
 FALLBACK_FAILURE_KINDS = {
+    LLMFailureKind.MODEL_NOT_FOUND,
+    LLMFailureKind.AUTH,
     LLMFailureKind.RATE_LIMIT,
     LLMFailureKind.TOKEN_LIMIT,
     LLMFailureKind.CONTEXT_LENGTH,

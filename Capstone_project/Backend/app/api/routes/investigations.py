@@ -171,6 +171,64 @@ async def list_investigations(
     )
 
 
+@router.delete("/all", response_model=InvestigationDeleteResponse)
+async def delete_all_investigations(
+    db: Session = Depends(get_db_session),
+    user=Depends(get_current_user),
+):
+    """Wipe every investigation and all related data, regardless of source.
+
+    Destructive and irreversible. Removes cases created manually and from intake,
+    plus their evidence, debate transcripts, verification claims, third-party
+    checks, review queue items, and audit rows.
+    """
+    investigation_ids = [row.id for row in db.query(Investigation.id).all()]
+
+    if not investigation_ids:
+        return InvestigationDeleteResponse(
+            deleted_count=0,
+            investigation_ids=[],
+            message="No investigations were found to delete.",
+        )
+
+    # Clear child tables first to satisfy foreign-key constraints, then the
+    # investigations themselves. ThirdPartyEvidenceVerification keys off claim_id.
+    for model in (
+        EvidenceArtifact,
+        DebateTranscript,
+        VerificationClaim,
+        DBInvestigationState,
+        ReviewQueueItem,
+        AuditLog,
+    ):
+        db.query(model).delete(synchronize_session=False)
+
+    db.query(ThirdPartyEvidenceVerification).delete(synchronize_session=False)
+    db.query(Investigation).delete(synchronize_session=False)
+    db.commit()
+
+    try:
+        from app.audit import eventstore
+
+        await eventstore.log_case_created(
+            "all-investigations-delete",
+            actor=getattr(user, "username", None) or "system",
+            details={
+                "action": "delete_all_investigations",
+                "deleted_count": len(investigation_ids),
+                "source": "api",
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Delete-all audit write failed: {exc}")
+
+    return InvestigationDeleteResponse(
+        deleted_count=len(investigation_ids),
+        investigation_ids=investigation_ids,
+        message=f"Deleted all {len(investigation_ids)} investigation(s) and related data.",
+    )
+
+
 @router.delete("/imported", response_model=InvestigationDeleteResponse)
 async def delete_imported_investigations(
     db: Session = Depends(get_db_session),

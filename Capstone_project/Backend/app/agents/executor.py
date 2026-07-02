@@ -18,12 +18,19 @@ import asyncio
 import hashlib
 import json
 import logging
+import time
 from datetime import datetime
 from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.metrics import (
+    debate_rounds_total,
+    investigation_duration_seconds,
+    investigations_total,
+    verification_results_total,
+)
 from app.db.models import (
     DebateTranscript,
     EvidenceArtifact,
@@ -94,6 +101,8 @@ class InvestigationExecutor:
 
     async def execute_investigation(self, investigation_id: str) -> Dict[str, Any]:
         logger.info(f"Starting investigation execution: {investigation_id}")
+        started = time.perf_counter()
+        result_status = "failed"
         try:
             investigation = self.db.get(Investigation, investigation_id)
             if not investigation:
@@ -147,6 +156,7 @@ class InvestigationExecutor:
 
             if not grounded:
                 await self._phase_escalate(investigation_id, state)
+                result_status = "escalated"
                 return {
                     "status": "escalated",
                     "investigation_id": investigation_id,
@@ -155,6 +165,7 @@ class InvestigationExecutor:
 
             needs_review = await self._phase_confidence_gate(investigation_id, state)
             if needs_review:
+                result_status = "review"
                 return {
                     "status": "review",
                     "investigation_id": investigation_id,
@@ -166,6 +177,7 @@ class InvestigationExecutor:
             await self._phase_report_and_audit(investigation_id, state)
 
             logger.info(f"Investigation {investigation_id} completed")
+            result_status = "completed"
             return {
                 "status": "completed",
                 "investigation_id": investigation_id,
@@ -192,6 +204,10 @@ class InvestigationExecutor:
                 investigation.error_message = str(e)[:2000]
                 self.db.commit()
             return {"status": "failed", "investigation_id": investigation_id, "error": str(e)}
+
+        finally:
+            investigations_total.labels(status=result_status).inc()
+            investigation_duration_seconds.observe(time.perf_counter() - started)
 
     def _initialize_state(self, investigation: Investigation) -> dict:
         return {
@@ -465,6 +481,7 @@ class InvestigationExecutor:
         for _ in range(settings.MAX_DEBATE_ROUNDS):
             state["round_cursor"] = state.get("round_cursor", 0) + 1
             round_num = state["round_cursor"]
+            debate_rounds_total.inc()
 
             await self._emit(
                 investigation_id,
@@ -704,6 +721,7 @@ class InvestigationExecutor:
             state["verification_results"] = verification
 
         is_grounded = bool(verification.get("is_grounded", True))
+        verification_results_total.labels(grounded=str(is_grounded).lower()).inc()
         adjudication = state.get("adjudication", {})
         self.db.add(
             VerificationClaim(

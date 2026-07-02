@@ -4,11 +4,13 @@ Wires middleware, lifespan, and routers for the Skeptic Engine backend.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.routes import (
     agents,
@@ -38,6 +40,22 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+def _configure_langsmith_tracing() -> None:
+    """LangChain/LangGraph read tracing config from env vars, not from our Settings
+    object, so mirror it in before any agent graph is built."""
+    if not settings.LANGSMITH_TRACING:
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"
+        return
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGCHAIN_API_KEY"] = settings.LANGSMITH_API_KEY
+    os.environ["LANGCHAIN_PROJECT"] = settings.LANGSMITH_PROJECT
+    os.environ["LANGCHAIN_ENDPOINT"] = settings.LANGSMITH_ENDPOINT
+    logger.info("LangSmith tracing enabled (project=%s)", settings.LANGSMITH_PROJECT)
+
+
+_configure_langsmith_tracing()
 
 
 @asynccontextmanager
@@ -87,6 +105,9 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
     add_request_logging_middleware(app)
+
+    if settings.METRICS_ENABLED:
+        Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
 
     # Health at root; everything else under the API root path.
     app.include_router(health.router)

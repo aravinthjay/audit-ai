@@ -9,13 +9,25 @@ from dataclasses import replace
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
+from app.core.metrics import (
+    llm_call_latency_seconds,
+    llm_calls_total,
+    llm_cost_usd_total,
+    llm_tokens_total,
+)
 from app.db.models import LLMCallLog
 from app.db.session import SessionLocal
 from app.llm.cache import response_cache
 from app.llm.pricing import estimate_cost_usd
-from app.llm.providers import AnthropicProvider, GroqProvider, OpenAIProvider
+from app.llm.providers import (
+    AnthropicProvider,
+    DeepSeekProvider,
+    GeminiProvider,
+    GroqProvider,
+    OpenAIProvider,
+)
 from app.llm.routing import prepare_request_for_model, quality_guardrail, route_model
-from app.llm.settings_store import api_key_for, get_llm_settings, provider_statuses
+from app.llm.settings_store import api_key_for, get_llm_settings, key_is_usable, provider_statuses
 from app.llm.tokenization import estimate_tokens
 from app.llm.types import (
     FALLBACK_FAILURE_KINDS,
@@ -40,6 +52,8 @@ class LLMService:
             "anthropic": AnthropicProvider(),
             "groq": GroqProvider(),
             "openai": OpenAIProvider(),
+            "gemini": GeminiProvider(),
+            "deepseek": DeepSeekProvider(),
         }
         self.session_factory = session_factory
 
@@ -64,9 +78,9 @@ class LLMService:
             model, model_tier, routing_reason = route_model(provider, prepared)
             fallback_used = provider != default_provider
             key = api_key_for(provider).strip()
-            if not key:
+            if not key_is_usable(key):
                 error = LLMProviderError(
-                    f"{provider} API key is not configured.",
+                    f"{provider} API key is missing or looks like a placeholder.",
                     provider=provider,
                     kind=LLMFailureKind.MISSING_API_KEY,
                     retryable=False,
@@ -84,7 +98,10 @@ class LLMService:
                     error_message=str(error),
                     quality_guardrail_text=quality_guardrail(prepared),
                 )
-                raise error
+                # Skip this provider and try the next configured one instead of
+                # hard-failing the whole request on one bad/placeholder key.
+                last_error = error
+                continue
 
             cache_key = response_cache.key(provider, model, prepared.prompt, prepared.system_prompt)
             if prepared.cacheable and settings.LLM_CACHE_ENABLED:
@@ -264,6 +281,31 @@ class LLMService:
         error_message: str | None = None,
         quality_guardrail_text: str = "",
     ) -> None:
+        llm_calls_total.labels(
+            provider=provider,
+            model=model,
+            request_type=request.request_type,
+            success=str(success).lower(),
+            cache_hit=str(cache_hit).lower(),
+            fallback_used=str(fallback_used).lower(),
+        ).inc()
+        if latency_ms:
+            llm_call_latency_seconds.labels(
+                provider=provider, model=model, request_type=request.request_type
+            ).observe(latency_ms / 1000)
+        if prompt_tokens:
+            llm_tokens_total.labels(provider=provider, model=model, token_type="prompt").inc(
+                prompt_tokens
+            )
+        if completion_tokens:
+            llm_tokens_total.labels(provider=provider, model=model, token_type="completion").inc(
+                completion_tokens
+            )
+        if estimated_cost_usd:
+            llm_cost_usd_total.labels(
+                provider=provider, model=model, request_type=request.request_type
+            ).inc(estimated_cost_usd)
+
         if not self.session_factory:
             return
         db = self.session_factory()

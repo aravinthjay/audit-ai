@@ -16,11 +16,20 @@ class ModelPricing:
 
 DEFAULT_PRICING_USD_PER_MILLION: dict[str, ModelPricing] = {
     "claude-3-5-sonnet-20241022": ModelPricing(3.00, 15.00),
+    "claude-sonnet-5": ModelPricing(3.00, 15.00),
+    "claude-opus-4-8": ModelPricing(15.00, 75.00),
+    "claude-haiku-4-5-20251001": ModelPricing(1.00, 5.00),
     "claude-3-5-haiku-20241022": ModelPricing(0.80, 4.00),
     "llama-3.3-70b-versatile": ModelPricing(0.59, 0.79),
     "llama-3.1-8b-instant": ModelPricing(0.05, 0.08),
     "gpt-4.1": ModelPricing(2.00, 8.00),
     "gpt-4.1-mini": ModelPricing(0.40, 1.60),
+    "gemini-1.5-pro": ModelPricing(1.25, 5.00),
+    "gemini-1.5-flash": ModelPricing(0.075, 0.30),
+    "gemini-2.0-flash": ModelPricing(0.10, 0.40),
+    "gemini-2.0-flash-lite": ModelPricing(0.075, 0.30),
+    "deepseek-chat": ModelPricing(0.27, 1.10),
+    "deepseek-reasoner": ModelPricing(0.55, 2.19),
 }
 
 

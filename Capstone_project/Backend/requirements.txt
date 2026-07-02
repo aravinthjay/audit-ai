@@ -45,6 +45,9 @@ httpx==0.28.1
 
 # Monitoring & Logging
 python-json-logger==3.2.1
+prometheus-client==0.21.1
+prometheus-fastapi-instrumentator==7.0.0
+langsmith==0.2.10
 
 # Utils
 tenacity==9.0.0

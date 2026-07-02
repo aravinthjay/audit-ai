@@ -1,4 +1,4 @@
-"""Groq OpenAI-compatible chat completions client."""
+"""DeepSeek OpenAI-compatible chat completions client."""
 
 from __future__ import annotations
 
@@ -11,13 +11,13 @@ from app.llm.providers.base import request_exception, response_error
 from app.llm.types import LLMRequest, ProviderResponse
 
 # Verdict agents must return strict JSON; enable provider JSON mode for them so
-# weaker models (e.g. Llama) don't wrap the object in prose or markdown fences.
+# weaker models don't wrap the object in prose or markdown fences.
 JSON_REQUEST_TYPES = {"adjudication", "verification"}
 
 
-class GroqProvider:
-    name = "groq"
-    endpoint = "https://api.groq.com/openai/v1/chat/completions"
+class DeepSeekProvider:
+    name = "deepseek"
+    endpoint = "https://api.deepseek.com/v1/chat/completions"
 
     def complete(
         self,
@@ -35,7 +35,7 @@ class GroqProvider:
         body: dict[str, Any] = {
             "model": model,
             "messages": messages,
-            "temperature": settings.GROQ_TEMPERATURE if request.temperature is None else request.temperature,
+            "temperature": settings.DEEPSEEK_TEMPERATURE if request.temperature is None else request.temperature,
             "max_tokens": request.max_tokens or 4000,
         }
         if request.request_type.lower() in JSON_REQUEST_TYPES:

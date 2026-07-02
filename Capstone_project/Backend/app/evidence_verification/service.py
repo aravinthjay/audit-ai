@@ -111,6 +111,7 @@ def normalize_category(value: str | None) -> str:
         "cab": ("cab", "taxi", "transport", "ride", "uber", "ola"),
         "fuel": ("fuel", "petrol", "diesel", "gasoline"),
         "gst": ("gst", "invoice", "vendor bill", "tax invoice", "supplier bill"),
+        "fx": ("fx", "currency", "forex", "exchange rate", "conversion"),
     }
     for category, needles in aliases.items():
         if any(needle in text for needle in needles):
@@ -554,6 +555,11 @@ class EvidenceVerificationService:
         )
 
     def _provider_for(self, category: str) -> PriceBenchmarkProvider:
+        # FX uses a keyless real API (Frankfurter) - no configuration needed.
+        if category == "fx":
+            from app.evidence_verification.providers import FrankfurterFxProvider
+
+            return FrankfurterFxProvider()
         url, api_key = self._configured_provider(category)
         if url:
             return ConfiguredHttpBenchmarkProvider(category, url, api_key)
@@ -584,6 +590,7 @@ class EvidenceVerificationService:
             "cab": settings.EVIDENCE_VERIFICATION_CAB_TOLERANCE,
             "fuel": settings.EVIDENCE_VERIFICATION_FUEL_TOLERANCE,
             "gst": settings.EVIDENCE_VERIFICATION_GST_TOLERANCE,
+            "fx": settings.EVIDENCE_VERIFICATION_FX_TOLERANCE,
         }
         return values.get(category, settings.EVIDENCE_VERIFICATION_DEFAULT_TOLERANCE)
 

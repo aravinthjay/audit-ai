@@ -91,20 +91,36 @@ def metric_catalog() -> list[dict]:
     return [_metric_row(definition, 0.0) for definition in METRIC_CATALOG]
 
 
-def compute_ragas_summary(db: Session) -> dict:
+def compute_ragas_summary(db: Session, investigation_id: str | None = None) -> dict:
     """Compute a RAGAS summary from stored investigation telemetry.
 
-    Returns an empty summary (``cases == 0``, ``metrics == []``) when there is
-    nothing to score, so the dashboard can show its empty state.
+    When ``investigation_id`` is given the scores are scoped to that single case;
+    otherwise they aggregate across every investigation. Returns an empty summary
+    (``cases == 0``, ``metrics == []``) when there is nothing to score, so the
+    dashboard can show its empty state.
     """
-    investigations = db.query(Investigation).all()
+    inv_query = db.query(Investigation)
+    if investigation_id is not None:
+        inv_query = inv_query.filter(Investigation.id == investigation_id)
+    investigations = inv_query.all()
+    if investigation_id is None:
+        # Only score cases the crew actually processed. Unrun "intake" imports have
+        # no evidence, debate, or verdict, so leaving them in drags every average
+        # toward zero and makes the model look far worse than it is.
+        investigations = [i for i in investigations if _status(i) != "intake"]
     total = len(investigations)
     if total == 0:
         return {"cases": 0, "metrics": [], "conclusion": ""}
 
-    claims = db.query(VerificationClaim).all()
-    evidence = db.query(EvidenceArtifact).all()
-    debates = db.query(DebateTranscript).all()
+    def _scoped(model):
+        query = db.query(model)
+        if investigation_id is not None:
+            query = query.filter(model.investigation_id == investigation_id)
+        return query.all()
+
+    claims = _scoped(VerificationClaim)
+    evidence = _scoped(EvidenceArtifact)
+    debates = _scoped(DebateTranscript)
 
     grounded_claims = sum(1 for c in claims if c.is_grounded)
     mean_relevance = _ratio(sum(e.relevance_score or 0.0 for e in evidence), len(evidence))
@@ -131,8 +147,6 @@ def compute_ragas_summary(db: Session) -> dict:
     metrics = [_metric_row(definition, scores.get(definition.metric, 0.0))
                for definition in METRIC_CATALOG]
     passing = sum(1 for m in metrics if m["pass"])
-    conclusion = (
-        f"{passing}/{len(metrics)} RAGAS metrics meet target across "
-        f"{total} scored case(s)."
-    )
+    scope = "for this case" if investigation_id is not None else f"across {total} scored case(s)"
+    conclusion = f"{passing}/{len(metrics)} RAGAS metrics meet target {scope}."
     return {"cases": total, "metrics": metrics, "conclusion": conclusion}

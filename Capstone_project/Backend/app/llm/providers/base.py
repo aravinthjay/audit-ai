@@ -23,6 +23,10 @@ def classify_provider_error(status_code: int | None, message: str) -> LLMFailure
         return LLMFailureKind.TOKEN_LIMIT
     if "quota" in lowered or "billing quota" in lowered or "insufficient quota" in lowered:
         return LLMFailureKind.QUOTA
+    if status_code in (401, 403) or "invalid_api_key" in lowered or "incorrect api key" in lowered or "invalid x-api-key" in lowered or "authentication" in lowered or "unauthorized" in lowered:
+        return LLMFailureKind.AUTH
+    if status_code == 404 or "not_found" in lowered or "not found" in lowered or "does not exist" in lowered:
+        return LLMFailureKind.MODEL_NOT_FOUND
     if status_code and status_code >= 500:
         return LLMFailureKind.PROVIDER_ERROR
     return LLMFailureKind.UNKNOWN

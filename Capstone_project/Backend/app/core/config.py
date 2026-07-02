@@ -3,10 +3,10 @@ Application configuration management.
 Environment-aware settings for development, testing, and production.
 """
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -23,9 +23,9 @@ class Settings(BaseSettings):
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
     API_ROOT_PATH: str = "/api/v1"
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: Annotated[list[str], NoDecode] = ["http://localhost:3000", "http://localhost:8000"]
     CORS_ALLOW_CREDENTIALS: bool = True
-    ALLOWED_HOSTS: list[str] = ["*"]
+    ALLOWED_HOSTS: Annotated[list[str], NoDecode] = ["*"]
 
     # Database
     DATABASE_URL: str = "postgresql://skeptic:skeptic_dev_password@localhost:5432/skeptic_engine"
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
     CELERY_TASK_SERIALIZER: str = "json"
-    CELERY_ACCEPT_CONTENT: list[str] = ["json"]
+    CELERY_ACCEPT_CONTENT: Annotated[list[str], NoDecode] = ["json"]
     CELERY_TIMEZONE: str = "UTC"
     USE_CELERY: bool = False
 
@@ -60,23 +60,41 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     GROQ_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
-    DEFAULT_LLM_PROVIDER: Literal["anthropic", "groq", "openai"] = "anthropic"
+    DEFAULT_LLM_PROVIDER: Literal["anthropic", "groq", "openai", "gemini", "deepseek"] = "anthropic"
     ENABLE_LLM_FALLBACK: bool = True
-    LLM_FALLBACK_ORDER: list[str] = ["groq", "openai"]
+    LLM_FALLBACK_ORDER: Annotated[list[str], NoDecode] = ["groq", "openai"]
     LLM_REQUEST_TIMEOUT_SECONDS: float = 45.0
     LLM_CACHE_ENABLED: bool = True
     LLM_CACHE_TTL_SECONDS: int = 1800
     LLM_MAX_PROMPT_TOKENS: int = 18000
     LLM_PRICING_OVERRIDES_JSON: str = ""
-    CLAUDE_MODEL_REASONING: str = "claude-3-5-sonnet-20241022"
-    CLAUDE_MODEL_LIGHTWEIGHT: str = "claude-3-5-haiku-20241022"
+    CLAUDE_MODEL_REASONING: str = "claude-sonnet-5"
+    CLAUDE_MODEL_LIGHTWEIGHT: str = "claude-haiku-4-5-20251001"
     GROQ_MODEL_REASONING: str = "llama-3.3-70b-versatile"
     GROQ_MODEL_LIGHTWEIGHT: str = "llama-3.1-8b-instant"
     OPENAI_MODEL_REASONING: str = "gpt-4.1"
     OPENAI_MODEL_LIGHTWEIGHT: str = "gpt-4.1-mini"
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL_REASONING: str = "gemini-2.0-flash"
+    GEMINI_MODEL_LIGHTWEIGHT: str = "gemini-2.0-flash-lite"
+    DEEPSEEK_API_KEY: str = ""
+    DEEPSEEK_MODEL_REASONING: str = "deepseek-reasoner"
+    DEEPSEEK_MODEL_LIGHTWEIGHT: str = "deepseek-chat"
     CLAUDE_MAX_TOKENS: int = 4000
     CLAUDE_TEMPERATURE: float = 0.7
+    ANTHROPIC_TEMPERATURE: float = 0.3
+    GROQ_TEMPERATURE: float = 0.2
+    OPENAI_TEMPERATURE: float = 0.2
+    GEMINI_TEMPERATURE: float = 0.3
+    DEEPSEEK_TEMPERATURE: float = 0.2
     USE_REAL_AGENTS: bool = False
+
+    # Observability
+    METRICS_ENABLED: bool = True
+    LANGSMITH_TRACING: bool = False
+    LANGSMITH_API_KEY: str = ""
+    LANGSMITH_PROJECT: str = "skeptic-engine"
+    LANGSMITH_ENDPOINT: str = "https://api.smith.langchain.com"
 
     # Authentication
     SECRET_KEY: str = ""
@@ -111,7 +129,7 @@ class Settings(BaseSettings):
     AUDIT_RETENTION_YEARS: int = 7
     IP_ALLOWLIST_ENABLED: bool = False
     REQUEST_LOGGING_ENABLED: bool = True
-    REQUEST_LOG_EXCLUDED_PATHS: list[str] = [
+    REQUEST_LOG_EXCLUDED_PATHS: Annotated[list[str], NoDecode] = [
         "/health",
         "/health/detailed",
         "/docs",
@@ -130,6 +148,8 @@ class Settings(BaseSettings):
     EVIDENCE_VERIFICATION_CAB_TOLERANCE: float = 0.25
     EVIDENCE_VERIFICATION_FUEL_TOLERANCE: float = 0.10
     EVIDENCE_VERIFICATION_GST_TOLERANCE: float = 0.0
+    # FX conversions are exact; a small band absorbs intra-day rate drift.
+    EVIDENCE_VERIFICATION_FX_TOLERANCE: float = 0.02
     FLIGHT_PRICE_PROVIDER_URL: str = ""
     FLIGHT_PRICE_PROVIDER_API_KEY: str = ""
     HOTEL_PRICE_PROVIDER_URL: str = ""
@@ -180,6 +200,8 @@ class Settings(BaseSettings):
                 "anthropic": "ANTHROPIC_API_KEY",
                 "groq": "GROQ_API_KEY",
                 "openai": "OPENAI_API_KEY",
+                "gemini": "GEMINI_API_KEY",
+                "deepseek": "DEEPSEEK_API_KEY",
             }[self.DEFAULT_LLM_PROVIDER]
             provider_key_value = getattr(self, provider_key_env)
             if not provider_key_value.strip():
@@ -187,6 +209,9 @@ class Settings(BaseSettings):
                     f"{provider_key_env} is required when USE_REAL_AGENTS=true "
                     f"and DEFAULT_LLM_PROVIDER={self.DEFAULT_LLM_PROVIDER}"
                 )
+
+        if self.LANGSMITH_TRACING and not self.LANGSMITH_API_KEY.strip():
+            raise ValueError("LANGSMITH_API_KEY is required when LANGSMITH_TRACING=true")
 
         if self.ENV != "production":
             return self

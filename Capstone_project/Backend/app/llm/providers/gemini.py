@@ -1,4 +1,4 @@
-"""Groq OpenAI-compatible chat completions client."""
+"""Google Gemini client via the OpenAI-compatible endpoint."""
 
 from __future__ import annotations
 
@@ -10,14 +10,13 @@ from app.core.config import settings
 from app.llm.providers.base import request_exception, response_error
 from app.llm.types import LLMRequest, ProviderResponse
 
-# Verdict agents must return strict JSON; enable provider JSON mode for them so
-# weaker models (e.g. Llama) don't wrap the object in prose or markdown fences.
+# Verdict agents must return strict JSON; enable JSON mode for them.
 JSON_REQUEST_TYPES = {"adjudication", "verification"}
 
 
-class GroqProvider:
-    name = "groq"
-    endpoint = "https://api.groq.com/openai/v1/chat/completions"
+class GeminiProvider:
+    name = "gemini"
+    endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 
     def complete(
         self,
@@ -32,14 +31,21 @@ class GroqProvider:
             messages.append({"role": "system", "content": request.system_prompt})
         messages.append({"role": "user", "content": request.prompt})
 
+        # Each provider applies its own configured temperature when the caller
+        # does not pin an explicit one, so tuning Gemini never affects the others.
+        temperature = (
+            settings.GEMINI_TEMPERATURE if request.temperature is None else request.temperature
+        )
+
         body: dict[str, Any] = {
             "model": model,
             "messages": messages,
-            "temperature": settings.GROQ_TEMPERATURE if request.temperature is None else request.temperature,
+            "temperature": temperature,
             "max_tokens": request.max_tokens or 4000,
         }
         if request.request_type.lower() in JSON_REQUEST_TYPES:
             body["response_format"] = {"type": "json_object"}
+
         try:
             response = requests.post(
                 self.endpoint,

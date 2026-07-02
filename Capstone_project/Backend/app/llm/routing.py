@@ -26,6 +26,10 @@ def provider_model(provider: ProviderName, *, lightweight: bool) -> str:
         return settings.CLAUDE_MODEL_LIGHTWEIGHT if lightweight else settings.CLAUDE_MODEL_REASONING
     if provider == "groq":
         return settings.GROQ_MODEL_LIGHTWEIGHT if lightweight else settings.GROQ_MODEL_REASONING
+    if provider == "gemini":
+        return settings.GEMINI_MODEL_LIGHTWEIGHT if lightweight else settings.GEMINI_MODEL_REASONING
+    if provider == "deepseek":
+        return settings.DEEPSEEK_MODEL_LIGHTWEIGHT if lightweight else settings.DEEPSEEK_MODEL_REASONING
     return settings.OPENAI_MODEL_LIGHTWEIGHT if lightweight else settings.OPENAI_MODEL_REASONING
 
 

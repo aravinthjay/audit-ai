@@ -50,16 +50,94 @@ class InvestigationState(TypedDict, total=False):
 
 
 def _extract_json(text: str) -> Optional[dict]:
+    # Weaker models sometimes wrap JSON in markdown fences or prose; strip a
+    # leading ```json / ``` fence before attempting to parse.
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?", "", cleaned).strip()
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3].strip()
     try:
-        return json.loads(text)
+        return json.loads(cleaned)
     except json.JSONDecodeError:
-        match = re.search(r"\{.*\}", text, re.DOTALL)
+        match = re.search(r"\{.*\}", cleaned, re.DOTALL)
         if match:
             try:
                 return json.loads(match.group(0))
             except json.JSONDecodeError:
                 return None
     return None
+
+
+# Static role instructions live in system prompts so they are sent once as a
+# cacheable prefix instead of being re-billed inside every user prompt. This
+# trims prompt tokens on every agent call without changing output quality.
+SYSTEM_PROMPTS: dict[str, str] = {
+    "evidence_collection": (
+        "You are the Evidence Collection Agent in an audit investigation system. "
+        "Return a concise, source-grounded evidence summary: key sources, red flags, "
+        "follow-up questions, and citation ids. State clearly whether external "
+        "corroboration was found, missing, or pending. Preserve any citation ids. "
+        "Be terse - no preamble, no restating the task."
+    ),
+    "challenger_argument": (
+        "You are the Challenger Agent in an audit debate. Argue the worst-case "
+        "interpretation grounded ONLY in the evidence. Advance the argument each round; "
+        "never repeat prior points. Be terse and specific about the control risk."
+    ),
+    "defender_argument": (
+        "You are the Defender Agent in an audit debate. Argue the most legitimate "
+        "interpretation grounded ONLY in the evidence. Directly rebut the Challenger's "
+        "latest point with specific citations. Be terse; never repeat a prior rebuttal."
+    ),
+    "adjudication": (
+        "You are the Adjudicator Agent. Weigh the debate and evidence and return a final "
+        "risk verdict. Respond with ONLY a JSON object and no prose: "
+        '{"risk_level":"critical|high|medium|low|cleared","confidence":0.0,'
+        '"reasoning":"...","key_concerns":["..."],"mitigating_factors":["..."]}'
+    ),
+    "verification": (
+        "You are the Verifier Agent doing QA grounding. Decide whether every material "
+        "claim in the adjudication is supported by the evidence. Make any missing "
+        "evidence actionable. Respond with ONLY a JSON object and no prose: "
+        '{"is_grounded":true,"ungrounded_claims":["..."],"verification_report":"..."}'
+    ),
+}
+
+# Per-agent output caps. Output tokens dominate cost, so we bound each agent to
+# what a focused answer needs instead of the global 4000-token ceiling.
+MAX_OUTPUT_TOKENS: dict[str, int] = {
+    "evidence_collection": 700,
+    "challenger_argument": 450,
+    "defender_argument": 450,
+    "adjudication": 600,
+    "verification": 450,
+}
+
+
+def _compact_citations(evidence_items: list[dict]) -> str:
+    """Summarize evidence artifacts as source+citation ids only.
+
+    The full artifact content already lives in the evidence summary, so re-dumping
+    it as JSON in adjudicator/verifier prompts just doubles the token bill. We keep
+    the provenance (source name + citation ids) which is what grounding checks need.
+    """
+    if not evidence_items:
+        return "None"
+    parts = []
+    for item in evidence_items:
+        source = item.get("source", "unknown")
+        citations = item.get("citations") or []
+        cite_text = f" [{', '.join(map(str, citations))}]" if citations else ""
+        parts.append(f"{source}{cite_text}")
+    return "; ".join(parts)
+
+
+def _join_points(points: list[str]) -> str:
+    """Number a list of argument strings compactly, or 'None yet' when empty."""
+    if not points:
+        return "None yet"
+    return "\n".join(f"{i}. {p}" for i, p in enumerate(points, 1))
 
 
 def _complete_llm(
@@ -76,9 +154,10 @@ def _complete_llm(
         LLMRequest(
             prompt=prompt,
             request_type=request_type,
+            system_prompt=SYSTEM_PROMPTS.get(request_type),
             complexity=complexity,  # type: ignore[arg-type]
-            temperature=settings.CLAUDE_TEMPERATURE if temperature is None else temperature,
-            max_tokens=settings.CLAUDE_MAX_TOKENS,
+            temperature=temperature,  # None -> each provider applies its own configured temperature
+            max_tokens=MAX_OUTPUT_TOKENS.get(request_type, settings.CLAUDE_MAX_TOKENS),
             metadata={"investigation_id": state.get("investigation_id")},
         )
     )
@@ -143,28 +222,18 @@ def create_evidence_agent() -> Callable[[InvestigationState], InvestigationState
         attempt = state.get("attempt", 1)
         feedback = state.get("verification_feedback", "")
         previous_summary = state.get("evidence_summary", "None yet")
-        prompt = f"""
-You are the Evidence Collection Agent for an audit investigation system.
-
-Transaction Details:
-- Vendor: {state['vendor']}
-- Category: {state['category']}
-- Amount: ${state['amount']:,.2f}
-- Materiality Threshold: ${state.get('materiality', 0):,.2f}
-
+        retry_hint = (
+            "\nThis is a retry - focus only on missing external corroboration "
+            "(vendor master data, POs, approvals, contracts, policy authority)."
+            if attempt > 1
+            else ""
+        )
+        prompt = f"""Transaction: {state['vendor']} | {state['category']} | ${state['amount']:,.2f} | materiality ${state.get('materiality', 0):,.2f}
 Attempt: {attempt}
-Prior Evidence Summary: {previous_summary}
-Verifier Feedback: {feedback or 'None yet'}
-Retrieved Policy/Data Context:
-{state.get('rag_context') or 'No policy chunks retrieved.'}
-
-List key evidence sources, red flags, follow-up questions, and citations. If this
-is a retry, focus the query on missing external corroboration such as vendor
-master data, purchase orders, approvals, contracts, or policy authority.
-Generate a concise evidence summary with actionable insights and clearly state
-whether external corroboration was found, missing, or still pending.
-Use the retrieved policy/data context when relevant and preserve citation ids.
-"""
+Prior summary: {previous_summary}
+Verifier feedback: {feedback or 'None'}
+Policy/data context:
+{state.get('rag_context') or 'No policy chunks retrieved.'}{retry_hint}"""
         response = _complete_llm(
             state,
             prompt,
@@ -200,19 +269,10 @@ def create_challenger_agent() -> Callable[[InvestigationState], InvestigationSta
         round_num = state.get("debate_round", 0) + 1
         prior_defender = state.get("defender_arguments", [])
         feedback = state.get("verification_feedback", "")
-        prompt = f"""
-You are the Challenger Agent in an audit investigation debate (round {round_num}).
-Argue the WORST-CASE interpretation of this transaction, grounded ONLY in the evidence.
-
-Transaction: {state['vendor']} - {state['category']} - ${state['amount']:,.2f}
-Evidence Summary: {state.get('evidence_summary', 'Not yet collected')}
-
-Defender's most recent rebuttal: {prior_defender[-1] if prior_defender else 'None yet'}
-{f'Verifier feedback to address from the previous attempt: {feedback}' if feedback else ''}
-
-If this is a later round, advance the argument: respond to the Defender's rebuttal and
-sharpen the specific control risk instead of repeating your opening. Stay grounded in evidence.
-"""
+        prompt = f"""Round {round_num}. Transaction: {state['vendor']} - {state['category']} - ${state['amount']:,.2f}
+Evidence: {state.get('evidence_summary', 'Not yet collected')}
+Defender's last rebuttal: {prior_defender[-1] if prior_defender else 'None yet'}
+{f'Verifier feedback to address: {feedback}' if feedback else ''}"""
         response = _complete_llm(
             state,
             prompt,
@@ -235,21 +295,11 @@ def create_defender_agent() -> Callable[[InvestigationState], InvestigationState
         prior_defender = state.get("defender_arguments", [])
         feedback = state.get("verification_feedback", "")
         round_num = state.get("debate_round", 0) + 1
-        prompt = f"""
-You are the Defender Agent in an audit investigation debate (round {round_num}).
-Argue the MOST LEGITIMATE interpretation of this transaction, grounded ONLY in the evidence.
-
-Transaction: {state['vendor']} - {state['category']} - ${state['amount']:,.2f}
-Evidence Summary: {state.get('evidence_summary', 'Not yet collected')}
-
-Challenger's latest argument:
-{challenger_args[-1] if challenger_args else 'None yet'}
+        prompt = f"""Round {round_num}. Transaction: {state['vendor']} - {state['category']} - ${state['amount']:,.2f}
+Evidence: {state.get('evidence_summary', 'Not yet collected')}
+Challenger's latest argument: {challenger_args[-1] if challenger_args else 'None yet'}
 Your previous rebuttal: {prior_defender[-1] if prior_defender else 'None yet'}
-{f'New evidence / verifier feedback since the last attempt: {feedback}' if feedback else ''}
-
-Directly rebut the Challenger's latest point and cite specific evidence. If new evidence is
-available this round, use it - do not repeat your previous rebuttal verbatim.
-"""
+{f'New evidence / verifier feedback: {feedback}' if feedback else ''}"""
         response = _complete_llm(
             state,
             prompt,
@@ -273,21 +323,13 @@ def create_adjudicator_agent() -> Callable[[InvestigationState], InvestigationSt
         logger.info(f"Adjudicator processing {state['investigation_id']}")
         challenger_args = state.get("challenger_arguments", [])
         defender_args = state.get("defender_arguments", [])
-        evidence_items = state.get("evidence", [])
-        prompt = f"""
-You are the Adjudicator Agent. Weigh the debate and render a final risk verdict.
-
-Transaction: {state['vendor']} - {state['category']} - ${state['amount']:,.2f}
-Evidence Summary: {state.get('evidence_summary', 'None')}
-Evidence Artifacts: {json.dumps(evidence_items, default=str)}
-
-Challenger Arguments: {json.dumps(challenger_args, default=str)}
-Defender Arguments: {json.dumps(defender_args, default=str)}
-
-Return ONLY a JSON object:
-{{"risk_level": "critical|high|medium|low|cleared", "confidence": 0.0,
-  "reasoning": "...", "key_concerns": ["..."], "mitigating_factors": ["..."]}}
-"""
+        prompt = f"""Transaction: {state['vendor']} - {state['category']} - ${state['amount']:,.2f}
+Evidence summary: {state.get('evidence_summary', 'None')}
+Evidence citations: {_compact_citations(state.get('evidence', []))}
+Challenger arguments:
+{_join_points(challenger_args)}
+Defender arguments:
+{_join_points(defender_args)}"""
         response = _complete_llm(
             state,
             prompt,
@@ -318,22 +360,9 @@ def create_verifier_agent() -> Callable[[InvestigationState], InvestigationState
     def verifier_node(state: InvestigationState) -> InvestigationState:
         logger.info(f"Verifier processing {state['investigation_id']}")
         adjudication = state.get("adjudication", {})
-        evidence_items = state.get("evidence", [])
-        prompt = f"""
-You are the Verifier Agent - your job is QA grounding.
-
-Evidence Available: {state.get('evidence_summary', 'None')}
-Evidence Artifacts: {json.dumps(evidence_items, default=str)}
-
-Adjudication to check: risk={adjudication.get('risk_level', 'unknown')},
-confidence={adjudication.get('confidence', 0)},
-concerns={adjudication.get('key_concerns', [])}.
-
-Decide whether EVERY material claim in the adjudication is supported by the evidence above.
-If a claim is ungrounded, make the missing evidence actionable so the Supervisor can re-query.
-Return ONLY a JSON object:
-{{"is_grounded": true|false, "ungrounded_claims": ["..."], "verification_report": "..."}}
-"""
+        prompt = f"""Evidence: {state.get('evidence_summary', 'None')}
+Evidence citations: {_compact_citations(state.get('evidence', []))}
+Adjudication to check: risk={adjudication.get('risk_level', 'unknown')}, confidence={adjudication.get('confidence', 0)}, concerns={adjudication.get('key_concerns', [])}"""
         response = _complete_llm(
             state,
             prompt,

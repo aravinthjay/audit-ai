@@ -17,11 +17,15 @@ PROVIDER_LABELS: dict[ProviderName, str] = {
     "anthropic": "Claude / Anthropic",
     "groq": "Groq",
     "openai": "OpenAI",
+    "gemini": "Gemini / Google",
+    "deepseek": "DeepSeek",
 }
 PROVIDER_KEY_ENV: dict[ProviderName, str] = {
     "anthropic": "ANTHROPIC_API_KEY",
     "groq": "GROQ_API_KEY",
     "openai": "OPENAI_API_KEY",
+    "gemini": "GEMINI_API_KEY",
+    "deepseek": "DEEPSEEK_API_KEY",
 }
 
 
@@ -49,8 +53,21 @@ def api_key_for(provider: ProviderName) -> str:
     return str(getattr(settings, PROVIDER_KEY_ENV[provider], "") or "")
 
 
+_PLACEHOLDER_MARKERS = ("your_", "your-", "yourapi", "replace", "xxxx", "...here", "changeme",
+                        "placeholder", "example", "<", "enter-your")
+
+
+def key_is_usable(key: str) -> bool:
+    """A key that is present, long enough, and not an obvious placeholder."""
+    k = (key or "").strip()
+    if len(k) < 12:
+        return False
+    low = k.lower()
+    return not any(marker in low for marker in _PLACEHOLDER_MARKERS)
+
+
 def provider_configured(provider: ProviderName) -> bool:
-    return bool(api_key_for(provider).strip())
+    return key_is_usable(api_key_for(provider))
 
 
 def provider_models(provider: ProviderName) -> tuple[str, str]:
@@ -58,6 +75,10 @@ def provider_models(provider: ProviderName) -> tuple[str, str]:
         return settings.CLAUDE_MODEL_REASONING, settings.CLAUDE_MODEL_LIGHTWEIGHT
     if provider == "groq":
         return settings.GROQ_MODEL_REASONING, settings.GROQ_MODEL_LIGHTWEIGHT
+    if provider == "gemini":
+        return settings.GEMINI_MODEL_REASONING, settings.GEMINI_MODEL_LIGHTWEIGHT
+    if provider == "deepseek":
+        return settings.DEEPSEEK_MODEL_REASONING, settings.DEEPSEEK_MODEL_LIGHTWEIGHT
     return settings.OPENAI_MODEL_REASONING, settings.OPENAI_MODEL_LIGHTWEIGHT
 
 

@@ -140,7 +140,27 @@ class AppSettingsOut(BaseModel):
     estimated_agent_run_cost_usd: float
 
 
-LLMProviderName = Literal["anthropic", "groq", "openai"]
+class AppSettingsUpdate(BaseModel):
+    """Editable governance settings sent from the Settings page (all optional)."""
+
+    reasoning_model: Optional[str] = None
+    report_model: Optional[str] = None
+    auto_clear_threshold: Optional[float] = None
+    reviewer_threshold: Optional[float] = None
+    materiality: Optional[float] = None
+    segregation_of_duties: Optional[bool] = None
+    immutable_audit_log: Optional[bool] = None
+    debate_round_cap: Optional[int] = None
+    api_key_vault: Optional[str] = None
+    theme: Optional[Literal["system", "light", "dark"]] = None
+    display_currency: Optional[str] = None
+    notifications: Optional[bool] = None
+    audit_retention_years: Optional[int] = None
+    ip_allowlist: Optional[bool] = None
+    estimated_agent_run_cost_usd: Optional[float] = None
+
+
+LLMProviderName = Literal["anthropic", "groq", "openai", "gemini", "deepseek"]
 
 
 class LLMProviderStatusOut(BaseModel):

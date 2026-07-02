@@ -6,8 +6,13 @@ from typing import Any
 
 import requests
 
+from app.core.config import settings
 from app.llm.providers.base import request_exception, response_error
 from app.llm.types import LLMRequest, ProviderResponse
+
+# Verdict agents must return strict JSON; enable provider JSON mode for them so
+# weaker models (e.g. Llama) don't wrap the object in prose or markdown fences.
+JSON_REQUEST_TYPES = {"adjudication", "verification"}
 
 
 class OpenAIProvider:
@@ -30,9 +35,11 @@ class OpenAIProvider:
         body: dict[str, Any] = {
             "model": model,
             "messages": messages,
-            "temperature": 0.7 if request.temperature is None else request.temperature,
+            "temperature": settings.OPENAI_TEMPERATURE if request.temperature is None else request.temperature,
             "max_tokens": request.max_tokens or 4000,
         }
+        if request.request_type.lower() in JSON_REQUEST_TYPES:
+            body["response_format"] = {"type": "json_object"}
         try:
             response = requests.post(
                 self.endpoint,

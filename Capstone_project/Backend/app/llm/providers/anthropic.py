@@ -6,6 +6,7 @@ from typing import Any
 
 import requests
 
+from app.core.config import settings
 from app.llm.providers.base import request_exception, response_error
 from app.llm.types import LLMRequest, ProviderResponse
 
@@ -25,7 +26,7 @@ class AnthropicProvider:
         body: dict[str, Any] = {
             "model": model,
             "max_tokens": request.max_tokens or 4000,
-            "temperature": 0.7 if request.temperature is None else request.temperature,
+            "temperature": settings.ANTHROPIC_TEMPERATURE if request.temperature is None else request.temperature,
             "messages": [{"role": "user", "content": request.prompt}],
         }
         if request.system_prompt:
