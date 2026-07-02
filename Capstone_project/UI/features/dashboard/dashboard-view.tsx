@@ -55,15 +55,16 @@ export function DashboardView() {
   }
 
   if (error || !data) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Executive overview"
+        icon={Gauge}
+        eyebrow="Overview"
         title={`${data.engagement} / ${data.period}`}
-        description="Monitor investigation throughput, agent health, risk distribution, and cases that require professional skepticism escalation."
+        description="Your at-a-glance view: how many cases are moving, which need a closer look, and how the AI helpers are doing right now."
         actions={
           <Button asChild>
             <Link href={routes.investigations}>

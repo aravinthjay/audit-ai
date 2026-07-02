@@ -1,6 +1,7 @@
 "use client";
 
 import { FileSearch } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { EvidenceCard } from "@/components/evidence/evidence-card";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,6 +11,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { routes } from "@/constants/routes";
 import { useActiveInvestigationId } from "@/hooks/use-active-investigation-id";
 import { useEvidence } from "@/hooks/use-evidence";
 import { useEvidenceVerification } from "@/hooks/use-evidence-verification";
@@ -56,7 +58,7 @@ export function EvidenceView({ caseId: explicitCaseId }: { caseId?: string }) {
   }
 
   if (activeCase.error) {
-    return <ErrorState onRetry={() => void activeCase.refetch()} />;
+    return <ErrorState error={activeCase.error} onRetry={() => void activeCase.refetch()} />;
   }
 
   if (!caseId) {
@@ -80,13 +82,15 @@ export function EvidenceView({ caseId: explicitCaseId }: { caseId?: string }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Evidence explorer"
-        title="Source-grounded evidence"
-        description={`Viewing all evidence attached to case ${caseTitle}. Ledger, intake, and third-party provider verification are shown together.`}
+        eyebrow="Evidence"
+        title="What we found"
+        description={`All the evidence for case ${caseTitle} in one place - your ledger data, the uploaded records, and outside price checks side by side.`}
         actions={
-          <Button variant="secondary">
-            <FileSearch className="h-4 w-4" aria-hidden="true" />
-            Source map
+          <Button asChild variant="secondary">
+            <Link href={routes.knowledgeBase}>
+              <FileSearch className="h-4 w-4" aria-hidden="true" />
+              Source map
+            </Link>
           </Button>
         }
       />

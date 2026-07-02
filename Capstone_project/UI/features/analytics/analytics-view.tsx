@@ -22,6 +22,7 @@ import {
   useLlmSummary,
   useRequestAnalytics,
 } from "@/hooks/use-analytics";
+import { downloadJson } from "@/lib/download";
 import type { LLMAnalyticsFilters } from "@/types/domain";
 
 const AnalyticsCharts = dynamic(
@@ -103,11 +104,18 @@ export function AnalyticsView() {
   return (
     <div className="space-y-6">
       <PageHeader
+        icon={BarChart3}
         eyebrow="Analytics"
-        title="Investigation performance"
-        description="Track AI assurance quality, verifier grounding rates, reviewer load, and confidence trends across the engagement."
+        title="How the AI is doing"
+        description="See how accurate the AI has been, how often people had to step in, and how workload and confidence are trending over time."
         actions={
-          <Button variant="secondary">
+          <Button
+            variant="secondary"
+            disabled={!hasAnalytics}
+            onClick={() =>
+              downloadJson("analytics-dashboard", { kpis, trend, accuracy, llmSummary })
+            }
+          >
             <BarChart3 className="h-4 w-4" aria-hidden="true" />
             Export dashboard
           </Button>

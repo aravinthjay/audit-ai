@@ -23,7 +23,7 @@ export function VerificationView({ caseId: explicitCaseId }: { caseId?: string }
   }
 
   if (activeCase.error) {
-    return <ErrorState onRetry={() => void activeCase.refetch()} />;
+    return <ErrorState error={activeCase.error} onRetry={() => void activeCase.refetch()} />;
   }
 
   if (!caseId) {
@@ -37,7 +37,7 @@ export function VerificationView({ caseId: explicitCaseId }: { caseId?: string }
   }
 
   if (error || !data) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   const grounded = data.filter((claim) => claim.status === "grounded").length;
@@ -48,9 +48,9 @@ export function VerificationView({ caseId: explicitCaseId }: { caseId?: string }
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Verifier"
-        title="Claim grounding"
-        description="Each agent claim is checked against pinned evidence, citation availability, and source freshness before report generation."
+        eyebrow="Fact check"
+        title="Is every claim backed up?"
+        description="Before a report goes out, we check that each thing the AI says is actually supported by real evidence and up-to-date sources."
         actions={
           <Button asChild>
             <Link href={routes.reportsFor(caseId)}>

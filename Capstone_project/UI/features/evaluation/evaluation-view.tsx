@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEvaluationSummary } from "@/hooks/use-evaluation";
+import { downloadJson } from "@/lib/download";
 
 export function EvaluationView() {
   const { data, error, isLoading, refetch } = useEvaluationSummary();
@@ -18,7 +19,7 @@ export function EvaluationView() {
   }
 
   if (error || !data) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   const hasEvaluation = data.cases > 0 || data.metrics.length > 0;
@@ -27,16 +28,17 @@ export function EvaluationView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="RAGAS evaluation"
-        title="Retrieval, generation & agentic quality"
-        description={`Scored over ${data.cases} labelled golden-set cases with RAGAS - faithfulness, context precision/recall, and agent goal accuracy.`}
+        icon={FlaskConical}
+        eyebrow="Quality scores"
+        title="Is the AI accurate?"
+        description={`We test the AI against ${data.cases} known-answer cases and score how factual, well-sourced, and on-target its answers are.`}
         actions={
           <>
             <Button variant="secondary">
               <RefreshCw className="h-4 w-4" aria-hidden="true" />
               Re-run eval
             </Button>
-            <Button>
+            <Button disabled={!hasEvaluation} onClick={() => downloadJson("evaluation-results", data)}>
               <FileDown className="h-4 w-4" aria-hidden="true" />
               Export results
             </Button>

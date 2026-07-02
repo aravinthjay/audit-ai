@@ -56,8 +56,8 @@ export function KnowledgeBaseView() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Knowledge base"
-        title="Governed source library"
-        description="Maintain audit methodology, client policies, evidence connectors, and registry integrations used by the agent workflow."
+        title="Rules the AI follows"
+        description="The policies, methods, and data sources the AI relies on when it reviews a case. Keep them current here."
         actions={
           <>
             <Button

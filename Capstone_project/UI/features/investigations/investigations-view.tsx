@@ -47,7 +47,7 @@ export function InvestigationsView() {
   }
 
   if (error || !data) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   const highRiskCount = investigations.filter((item) => item.risk === "critical" || item.risk === "high").length;
@@ -60,9 +60,9 @@ export function InvestigationsView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Case inventory"
-        title="Investigations"
-        description="Prioritize exceptions by risk, confidence, materiality, status, reviewer ownership, and open evidence gaps."
+        eyebrow="Cases"
+        title="All your cases"
+        description="Every open case in one list. Sort by risk, confidence, amount, status, or owner to decide what to look at first."
         actions={
           <>
             <Button

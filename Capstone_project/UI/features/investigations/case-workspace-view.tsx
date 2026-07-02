@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuditTimeline } from "@/components/audit/audit-timeline";
 import { EvidenceVerificationCard } from "@/components/evidence/evidence-verification-card";
 import { DebateMessage } from "@/components/debate/debate-message";
+import { EvaluationScorecard } from "@/components/evaluation/evaluation-scorecard";
 import { EvidenceCard } from "@/components/evidence/evidence-card";
 import { ReportPreview } from "@/components/reports/report-preview";
 import { ChartSkeleton } from "@/components/shared/chart-skeleton";
@@ -25,12 +26,14 @@ import { useAgentWorkflow } from "@/hooks/use-agent-workflow";
 import { useAuditEvents } from "@/hooks/use-audit-events";
 import { useExecuteInvestigation } from "@/hooks/use-cases";
 import { useDebateArguments } from "@/hooks/use-debate";
+import { useCaseEvaluation } from "@/hooks/use-evaluation";
 import { useEvidence } from "@/hooks/use-evidence";
 import { useEvidenceVerification, useVerifyEvidence } from "@/hooks/use-evidence-verification";
 import { useInvestigation } from "@/hooks/use-investigation";
 import { useInvestigationRealtime } from "@/hooks/use-investigation-realtime";
 import { useReports } from "@/hooks/use-reports";
 import { useVerificationClaims } from "@/hooks/use-verification";
+import { friendlyError } from "@/lib/friendly-error";
 import { formatCurrency } from "@/lib/utils";
 import type { AgentRole, Investigation, InvestigationStatus, PipelineStep, WorkState } from "@/types/domain";
 
@@ -175,6 +178,7 @@ export function CaseWorkspaceView({ caseId }: { caseId: string }) {
   const debateQuery = useDebateArguments(caseId);
   const verificationQuery = useVerificationClaims(caseId);
   const reportsQuery = useReports();
+  const caseEvaluationQuery = useCaseEvaluation(caseId);
   const auditQuery = useAuditEvents(caseId);
   const executeCase = useExecuteInvestigation();
   const verifyEvidence = useVerifyEvidence(caseId);
@@ -271,7 +275,12 @@ export function CaseWorkspaceView({ caseId }: { caseId: string }) {
   }
 
   if (investigationQuery.error || evidenceQuery.error) {
-    return <ErrorState onRetry={() => void Promise.all([investigationQuery.refetch(), evidenceQuery.refetch()])} />;
+    return (
+      <ErrorState
+        error={investigationQuery.error ?? evidenceQuery.error}
+        onRetry={() => void Promise.all([investigationQuery.refetch(), evidenceQuery.refetch()])}
+      />
+    );
   }
 
   if (!investigation) {
@@ -322,15 +331,32 @@ export function CaseWorkspaceView({ caseId }: { caseId: string }) {
         }
       />
 
-      {runError ? (
-        <div className="rounded-md border border-danger-border bg-danger-soft px-4 py-3 text-sm text-danger-foreground">
-          {runError}
-        </div>
-      ) : runMessage || isPipelineRunning ? (
-        <div className="rounded-md border border-info-border bg-info-soft px-4 py-3 text-sm text-info-foreground">
-          {runMessage ?? "Agent crew is running. Workspace data will refresh automatically."}
-        </div>
-      ) : null}
+      {(() => {
+        const source = runError ?? runMessage;
+        const feedback = source ? friendlyError(source) : null;
+        if (feedback?.isError) {
+          return (
+            <div className="rounded-md border border-danger-border bg-danger-soft px-4 py-3 text-sm text-danger-foreground">
+              <p className="font-semibold">{feedback.title}</p>
+              <p className="mt-1 text-danger-foreground/80">{feedback.detail}</p>
+              {feedback.detail !== feedback.raw ? (
+                <details className="mt-1">
+                  <summary className="cursor-pointer text-xs text-danger-foreground/70">Technical details</summary>
+                  <pre className="mt-1 whitespace-pre-wrap break-words text-[11px] text-danger-foreground/70">{feedback.raw}</pre>
+                </details>
+              ) : null}
+            </div>
+          );
+        }
+        if (runMessage || isPipelineRunning) {
+          return (
+            <div className="rounded-md border border-info-border bg-info-soft px-4 py-3 text-sm text-info-foreground">
+              {runMessage ?? "Agent crew is running. Workspace data will refresh automatically."}
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
         <Card>
@@ -502,6 +528,23 @@ export function CaseWorkspaceView({ caseId }: { caseId: string }) {
             />
           )}
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-semibold text-foreground">Quality scores for this case</h2>
+          {caseEvaluationQuery.data?.conclusion ? (
+            <p className="text-xs text-muted-foreground">{caseEvaluationQuery.data.conclusion}</p>
+          ) : null}
+        </div>
+        {caseEvaluationQuery.data && caseEvaluationQuery.data.metrics.length > 0 ? (
+          <EvaluationScorecard metrics={caseEvaluationQuery.data.metrics} />
+        ) : (
+          <InlineEmpty
+            title="No quality scores yet"
+            description="RAGAS scores for this case appear once it has evidence, a debate, and a verified verdict."
+          />
+        )}
       </section>
     </div>
   );

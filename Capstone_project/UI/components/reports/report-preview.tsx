@@ -1,9 +1,12 @@
+"use client";
+
 import { FileText } from "lucide-react";
 import { ConfidenceMeter } from "@/components/shared/confidence-meter";
 import { RiskBadge } from "@/components/shared/risk-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { downloadReportJson, downloadReportPdf } from "@/lib/report-export";
 import type { ReportArtifact } from "@/types/domain";
 
 const statusTone = {
@@ -44,13 +47,22 @@ export function ReportPreview({ report }: { report: ReportArtifact }) {
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <ConfidenceMeter value={report.confidence} className="w-full sm:max-w-xs" />
               <div className="flex flex-wrap gap-2">
-                <Button variant="secondary" size="sm">
+                <Button variant="secondary" size="sm" onClick={() => downloadReportPdf(report)}>
                   Open report
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const opened = downloadReportPdf(report);
+                    if (!opened) {
+                      window.alert("Allow pop-ups for this site to save the report as a PDF.");
+                    }
+                  }}
+                >
                   PDF
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={() => downloadReportJson(report)}>
                   JSON
                 </Button>
               </div>

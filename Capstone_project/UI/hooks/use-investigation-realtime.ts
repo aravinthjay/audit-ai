@@ -63,11 +63,14 @@ export function useInvestigationRealtime(
         queryClient.invalidateQueries({ queryKey: ["investigations"] }),
         queryClient.invalidateQueries({ queryKey: ["review-queue"] }),
         queryClient.invalidateQueries({ queryKey: ["investigation", caseId] }),
+        queryClient.invalidateQueries({ queryKey: ["agent-workflow", caseId] }),
         queryClient.invalidateQueries({ queryKey: ["evidence", caseId] }),
         queryClient.invalidateQueries({ queryKey: ["evidence-verification", caseId] }),
         queryClient.invalidateQueries({ queryKey: ["debate", caseId] }),
         queryClient.invalidateQueries({ queryKey: ["verification", caseId] }),
         queryClient.invalidateQueries({ queryKey: ["audit-events", caseId] }),
+        queryClient.invalidateQueries({ queryKey: ["evaluation-case", caseId] }),
+        queryClient.invalidateQueries({ queryKey: ["reports"] }),
       ]);
     };
 

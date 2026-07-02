@@ -71,9 +71,9 @@ export function DebateView({ caseId: explicitCaseId }: { caseId?: string }) {
 
   const header = (
     <PageHeader
-      eyebrow="Agent debate"
-      title="Challenger and defender exchange"
-      description="Review adversarial arguments, cited objections, defense claims, and the unresolved assertions that should drive human review."
+      eyebrow="AI debate"
+      title="Both sides of the argument"
+      description="Two AI helpers argue it out - one looks for problems, the other defends the transaction. See what each said and what stayed unresolved."
       actions={
         <>
           {selector}

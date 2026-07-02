@@ -325,6 +325,12 @@ export async function deleteImportedInvestigations(): Promise<DeleteImportedInve
   });
 }
 
+export async function deleteAllInvestigations(): Promise<DeleteImportedInvestigationsResponse> {
+  return apiRequest<DeleteImportedInvestigationsResponse>("/investigations/all", {
+    method: "DELETE",
+  });
+}
+
 export async function executeInvestigation(caseId: string): Promise<ExecuteInvestigationResponse> {
   return apiRequest<{ investigation_id: string; task_id?: string | null; status: string; message: string }>(
     `/investigations/${caseId}/execute`,

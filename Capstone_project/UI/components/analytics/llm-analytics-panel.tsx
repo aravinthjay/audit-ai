@@ -144,7 +144,13 @@ export function LLMAnalyticsPanel({
               <Coins className="h-4 w-4 text-primary" aria-hidden="true" />
             </div>
             <p className="mt-2 font-mono text-2xl text-foreground">{money(summary.totalEstimatedCostUsd)}</p>
-            <p className="mt-1 text-xs text-muted-foreground">pricing config estimate</p>
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+              </span>
+              Live &middot; updates every 5s
+            </p>
           </CardContent>
         </Card>
         <Card>

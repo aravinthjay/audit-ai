@@ -258,7 +258,7 @@ export type RequestAnalytics = {
   }>;
 };
 
-export type LLMProviderName = "anthropic" | "groq" | "openai";
+export type LLMProviderName = "anthropic" | "groq" | "openai" | "gemini";
 
 export type LLMProviderStatus = {
   id: LLMProviderName;

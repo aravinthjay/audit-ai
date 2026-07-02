@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useActiveInvestigationId } from "@/hooks/use-active-investigation-id";
 import { useAuditEvents } from "@/hooks/use-audit-events";
+import { downloadJson } from "@/lib/download";
 import type { AuditEvent } from "@/types/domain";
 
 const emptyEvents: AuditEvent[] = [];
@@ -45,21 +46,26 @@ export function AuditLogsView({ caseId: explicitCaseId }: { caseId?: string }) {
   }
 
   if (activeCase.error) {
-    return <ErrorState onRetry={() => void activeCase.refetch()} />;
+    return <ErrorState error={activeCase.error} onRetry={() => void activeCase.refetch()} />;
   }
 
   if (error || !data) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Immutable audit log"
-        title="Replay timeline"
-        description="Inspect locked agent actions, evidence versions, verifier outcomes, reviewer routing, and tamper-evident hashes."
+        icon={LockKeyhole}
+        eyebrow="Activity log"
+        title="Everything that happened"
+        description="A locked, tamper-evident record of every AI action, evidence change, and reviewer decision - so you can always show exactly what was done and when."
         actions={
-          <Button variant="secondary">
+          <Button
+            variant="secondary"
+            disabled={filtered.length === 0}
+            onClick={() => downloadJson(`audit-log-${caseId ?? "all"}`, filtered)}
+          >
             <LockKeyhole className="h-4 w-4" aria-hidden="true" />
             Export log
           </Button>

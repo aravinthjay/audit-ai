@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useLlmSettings, useUpdateLlmSettings } from "@/hooks/use-settings";
 import type { LLMProviderName } from "@/types/domain";
 
-const providerIds: LLMProviderName[] = ["anthropic", "groq", "openai"];
+const providerIds: LLMProviderName[] = ["anthropic", "groq", "openai", "gemini"];
 
 function normalizeFallbackOrder(defaultProvider: LLMProviderName, order: LLMProviderName[]) {
   const next = order.filter((provider, index) => provider !== defaultProvider && order.indexOf(provider) === index);

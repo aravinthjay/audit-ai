@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { routes } from "@/constants/routes";
 import { useActiveInvestigationId } from "@/hooks/use-active-investigation-id";
 import { useReports } from "@/hooks/use-reports";
+import { downloadReportsPdf } from "@/lib/report-export";
 
 export function ReportsView({ caseId: explicitCaseId }: { caseId?: string }) {
   const activeCase = useActiveInvestigationId(explicitCaseId);
@@ -23,19 +24,20 @@ export function ReportsView({ caseId: explicitCaseId }: { caseId?: string }) {
   }
 
   if (activeCase.error) {
-    return <ErrorState onRetry={() => void activeCase.refetch()} />;
+    return <ErrorState error={activeCase.error} onRetry={() => void activeCase.refetch()} />;
   }
 
   if (error || !data) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Report generation"
-        title="Professional skepticism reports"
-        description="Generate source-grounded memos and governance packs from verified claims, debate outcomes, reviewer decisions, and audit log evidence."
+        icon={FileText}
+        eyebrow="Reports"
+        title="Case reports"
+        description="Download a clear, evidence-backed report for each finished case - what the AI found, the decision, and who signed off. Save as PDF or JSON."
         actions={
           <>
             <Button asChild variant="secondary">
@@ -44,11 +46,23 @@ export function ReportsView({ caseId: explicitCaseId }: { caseId?: string }) {
                 {caseId ? "Open active case" : "Open investigations"}
               </Link>
             </Button>
-            <Button variant="secondary">
+            <Button
+              variant="secondary"
+              disabled={data.length === 0}
+              onClick={() => downloadReportsPdf(data)}
+            >
               <Printer className="h-4 w-4" aria-hidden="true" />
               Print preview
             </Button>
-            <Button>
+            <Button
+              disabled={data.length === 0}
+              onClick={() => {
+                const opened = downloadReportsPdf(data);
+                if (!opened && data.length > 0) {
+                  window.alert("Allow pop-ups for this site to save reports as a PDF.");
+                }
+              }}
+            >
               <Download className="h-4 w-4" aria-hidden="true" />
               Export PDF
             </Button>

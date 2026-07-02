@@ -18,19 +18,20 @@ export function SettingsView() {
   }
 
   if (error) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
+        icon={Settings}
         eyebrow="Settings"
-        title="Governance controls"
-        description="Configure model routing, confidence thresholds, materiality policy, reviewer separation, and audit log enforcement."
+        title="Settings & controls"
+        description="Choose which AI models to use, set how sure the AI must be before clearing a case, and turn safety controls on or off."
         actions={
           <Button variant="secondary">
             <Settings className="h-4 w-4" aria-hidden="true" />
-            Policy history
+            Change history
           </Button>
         }
       />

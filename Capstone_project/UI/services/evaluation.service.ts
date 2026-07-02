@@ -16,9 +16,7 @@ type ApiEvaluationSummary = {
   conclusion: string;
 };
 
-export async function getEvaluationSummary(): Promise<EvaluationSummary> {
-  const data = await apiRequest<ApiEvaluationSummary>("/evaluation/summary");
-
+function mapEvaluation(data: ApiEvaluationSummary): EvaluationSummary {
   return {
     cases: data.cases,
     metrics: data.metrics.map((metric) => ({
@@ -31,4 +29,14 @@ export async function getEvaluationSummary(): Promise<EvaluationSummary> {
     })),
     conclusion: data.conclusion,
   };
+}
+
+export async function getEvaluationSummary(): Promise<EvaluationSummary> {
+  return mapEvaluation(await apiRequest<ApiEvaluationSummary>("/evaluation/summary"));
+}
+
+export async function getCaseEvaluation(caseId: string): Promise<EvaluationSummary> {
+  return mapEvaluation(
+    await apiRequest<ApiEvaluationSummary>(`/evaluation/case/${encodeURIComponent(caseId)}`),
+  );
 }

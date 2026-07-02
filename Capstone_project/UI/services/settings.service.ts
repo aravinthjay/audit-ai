@@ -87,6 +87,33 @@ export async function getSettings(): Promise<AppSettings> {
   return mapSettings(await apiRequest<ApiAppSettings>("/settings"));
 }
 
+export async function updateSettings(payload: AppSettings): Promise<AppSettings> {
+  const body: ApiAppSettings = {
+    reasoning_model: payload.reasoningModel,
+    report_model: payload.reportModel,
+    auto_clear_threshold: payload.autoClearThreshold,
+    reviewer_threshold: payload.reviewerThreshold,
+    materiality: payload.materiality,
+    segregation_of_duties: payload.segregationOfDuties,
+    immutable_audit_log: payload.immutableAuditLog,
+    debate_round_cap: payload.debateRoundCap,
+    api_key_vault: payload.apiKeyVault,
+    theme: payload.theme,
+    display_currency: payload.displayCurrency,
+    notifications: payload.notifications,
+    audit_retention_years: payload.auditRetentionYears,
+    ip_allowlist: payload.ipAllowlist,
+    estimated_agent_run_cost_usd: payload.estimatedAgentRunCostUsd,
+  };
+
+  return mapSettings(
+    await apiRequest<ApiAppSettings>("/settings", {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+  );
+}
+
 export async function getLlmSettings(): Promise<LLMSettings> {
   return mapLlmSettings(await apiRequest<ApiLLMSettings>("/settings/llm"));
 }

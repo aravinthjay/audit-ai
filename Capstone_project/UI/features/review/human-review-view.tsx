@@ -67,9 +67,9 @@ export function HumanReviewView({ caseId }: { caseId?: string }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Human review"
-        title="Partner decision panel"
-        description="Document reviewer judgement, capture rationale, and preserve the decision trail for high-risk AI-assisted conclusions."
+        eyebrow="My review"
+        title="Your decision"
+        description="Make the final call on the cases the AI flagged. Record what you decided and why - it's all saved for the audit trail."
         actions={
           <Button asChild variant="secondary">
             <Link href={activeCaseId ? routes.auditLogsFor(activeCaseId) : routes.auditLogs}>

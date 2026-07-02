@@ -4,6 +4,7 @@ import "reactflow/dist/style.css";
 
 import ReactFlow, {
   Background,
+  ControlButton,
   Controls,
   Handle,
   MiniMap,
@@ -12,6 +13,8 @@ import ReactFlow, {
   type Node,
   type NodeProps,
 } from "reactflow";
+import { Maximize2, Minimize2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMemo } from "react";
 import { ConfidenceMeter } from "@/components/shared/confidence-meter";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -64,6 +67,9 @@ const nodeTypes = {
 };
 
 export function AgentWorkflow({ steps, className }: { steps: PipelineStep[]; className?: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   const nodes = useMemo<Node<WorkflowNodeData>[]>(
     () =>
       steps.map((step, index) => ({
@@ -90,8 +96,34 @@ export function AgentWorkflow({ steps, className }: { steps: PipelineStep[]; cla
     [steps],
   );
 
+  // Keep local state in sync with the browser's fullscreen status (covers Esc).
+  useEffect(() => {
+    const handler = () => setIsFullscreen(document.fullscreenElement === containerRef.current);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) {
+      return;
+    }
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+    } else {
+      void el.requestFullscreen?.();
+    }
+  }, []);
+
   return (
-    <div className={cn("h-[520px] overflow-hidden rounded-lg border border-border bg-card", className)}>
+    <div
+      ref={containerRef}
+      className={cn(
+        "overflow-hidden rounded-lg border border-border bg-card",
+        isFullscreen ? "h-screen w-screen rounded-none" : "h-[520px]",
+        className,
+      )}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -105,7 +137,15 @@ export function AgentWorkflow({ steps, className }: { steps: PipelineStep[]; cla
       >
         <Background color="hsl(var(--border))" gap={20} />
         <MiniMap pannable zoomable className="!bg-muted" />
-        <Controls className="!border-border !bg-card !text-foreground" />
+        <Controls className="!border-border !bg-card !text-foreground">
+          <ControlButton
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit full screen" : "View full screen"}
+            aria-label={isFullscreen ? "Exit full screen" : "View full screen"}
+          >
+            {isFullscreen ? <Minimize2 /> : <Maximize2 />}
+          </ControlButton>
+        </Controls>
       </ReactFlow>
     </div>
   );

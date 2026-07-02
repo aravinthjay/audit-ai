@@ -14,7 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { routes } from "@/constants/routes";
 import { heldBackCaseCount, MAX_CASES_PER_INTAKE_RUN, rowsForCaseCreation } from "@/features/intake/intake-limits";
-import { useCreateInvestigations, useDeleteImportedInvestigations, useExecuteInvestigations } from "@/hooks/use-cases";
+import {
+  useCreateInvestigations,
+  useDeleteAllInvestigations,
+  useDeleteImportedInvestigations,
+  useExecuteInvestigations,
+} from "@/hooks/use-cases";
 import { useIntakeSummary } from "@/hooks/use-intake";
 import { useSettings } from "@/hooks/use-settings";
 import { defaultIntakeParseOptions, parseLedgerFile } from "@/services/intake.service";
@@ -48,6 +53,7 @@ export function IntakeView() {
   const settingsQuery = useSettings();
   const createCases = useCreateInvestigations();
   const deleteImportedCases = useDeleteImportedInvestigations();
+  const deleteAllCases = useDeleteAllInvestigations();
   const runCases = useExecuteInvestigations();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploadedSummary, setUploadedSummary] = useState<IntakeSummary | null>(null);
@@ -113,6 +119,27 @@ export function IntakeView() {
     } catch (deleteError) {
       setCreateError(deleteError instanceof Error ? deleteError.message : "Unable to delete imported intake data.");
       setRunStatus("Imported data deletion failed. Check the backend connection and try again.");
+    }
+  }
+
+  async function handleDeleteAllCases() {
+    const confirmed = window.confirm(
+      "Delete EVERY case and all of its data? This wipes all investigations (manual and imported) plus their evidence, debate, verification, audit, and review records. This cannot be undone.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setCreateError(null);
+    setRunStatus("Deleting all cases and related data from the backend...");
+
+    try {
+      const result = await deleteAllCases.mutateAsync();
+      setRunStatus(result.message);
+    } catch (deleteError) {
+      setCreateError(deleteError instanceof Error ? deleteError.message : "Unable to delete all data.");
+      setRunStatus("Delete-all failed. Check the backend connection and try again.");
     }
   }
 
@@ -210,9 +237,10 @@ export function IntakeView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Phase 0 - Case intake"
-        title="GL ingestion & rule pre-filter"
-        description="Ingest a general-ledger extract, normalize each row, and run the deterministic pre-filter. Only flagged rows become investigation cases; clean rows are cleared at intake."
+        icon={UploadCloud}
+        eyebrow="Step 1 - Upload data"
+        title="Upload your ledger"
+        description="Drop in a spreadsheet of transactions. We check every row against the rules and only turn the risky ones into cases - clean rows are cleared automatically."
         actions={
           <>
             <Button variant="secondary" onClick={() => setShowPastRuns((open) => !open)}>
@@ -237,6 +265,14 @@ export function IntakeView() {
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
               {deleteImportedCases.isPending ? "Deleting..." : "Delete imported data"}
+            </Button>
+            <Button
+              variant="danger"
+              disabled={deleteAllCases.isPending || deleteImportedCases.isPending || createCases.isPending || runCases.isPending}
+              onClick={() => void handleDeleteAllCases()}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              {deleteAllCases.isPending ? "Deleting everything..." : "Delete everything"}
             </Button>
           </>
         }

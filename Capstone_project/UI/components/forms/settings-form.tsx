@@ -6,11 +6,14 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useUpdateSettings } from "@/hooks/use-settings";
 import { settingsSchema, type SettingsForm as SettingsFormValues } from "@/types/forms";
 import type { AppSettings } from "@/types/domain";
 
 export function SettingsForm({ settings }: { settings: AppSettings }) {
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const updateSettings = useUpdateSettings();
   const {
     formState: { errors, isSubmitting },
     handleSubmit,
@@ -25,8 +28,15 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
     reset(settings);
   }, [reset, settings]);
 
-  function onSubmit() {
-    setSavedAt(new Date().toLocaleTimeString());
+  async function onSubmit(values: SettingsFormValues) {
+    setSaveError(null);
+    try {
+      await updateSettings.mutateAsync(values);
+      setSavedAt(new Date().toLocaleTimeString());
+    } catch (error) {
+      setSavedAt(null);
+      setSaveError(error instanceof Error ? error.message : "Could not save settings.");
+    }
   }
 
   return (
@@ -189,12 +199,18 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
 
           {savedAt ? (
             <p className="rounded-md border border-success-border bg-success-soft px-3 py-2 text-sm text-success-foreground">
-              Settings staged at {savedAt}
+              Saved to backend at {savedAt}
             </p>
           ) : null}
 
-          <Button className="w-full" type="submit" disabled={isSubmitting}>
-            Save policy
+          {saveError ? (
+            <p className="rounded-md border border-danger-border bg-danger-soft px-3 py-2 text-sm text-danger-foreground">
+              {saveError}
+            </p>
+          ) : null}
+
+          <Button className="w-full" type="submit" disabled={isSubmitting || updateSettings.isPending}>
+            {updateSettings.isPending ? "Saving..." : "Save policy"}
           </Button>
         </CardContent>
       </Card>

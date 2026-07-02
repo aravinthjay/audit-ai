@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createInvestigation,
   createInvestigations,
+  deleteAllInvestigations,
   deleteImportedInvestigations,
   executeInvestigation,
   executeInvestigations,
@@ -92,6 +93,19 @@ export function useDeleteImportedInvestigations() {
           queryClient.removeQueries({ queryKey: ["audit-events", caseId] }),
         ]),
       ]);
+    },
+  });
+}
+
+export function useDeleteAllInvestigations() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteAllInvestigations,
+    onSuccess: async () => {
+      // Everything is gone, so clear the whole cache rather than surgically
+      // invalidating individual case keys.
+      queryClient.clear();
     },
   });
 }

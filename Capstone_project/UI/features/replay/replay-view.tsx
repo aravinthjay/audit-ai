@@ -60,7 +60,7 @@ export function ReplayView({ caseId: explicitCaseId }: { caseId?: string }) {
   }
 
   if (activeCase.error) {
-    return <ErrorState onRetry={() => void activeCase.refetch()} />;
+    return <ErrorState error={activeCase.error} onRetry={() => void activeCase.refetch()} />;
   }
 
   if (!caseId) {
@@ -74,7 +74,7 @@ export function ReplayView({ caseId: explicitCaseId }: { caseId?: string }) {
   }
 
   if (error || !data) {
-    return <ErrorState onRetry={() => void refetch()} />;
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   if (!activeFrame) {
