@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Story of Maria — Backend Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    background: #05070d;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+  .stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .scene {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.9s ease;
+  }
+  .scene.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .eyebrow {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.3rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
+  }
+  .headline {
+    font-size: 3rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 3rem;
+    max-width: 900px;
+  }
+  .story-line {
+    font-size: 1.5rem;
+    text-align: center;
+    max-width: 800px;
+    line-height: 1.5;
+    margin-top: 3rem;
+  }
+  .avatar-wrap {
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .mood-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 2.4rem;
+    background: #0B1220;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid currentColor;
+  }
+  .avatar-circle {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.9s ease, transform 0.6s ease;
+  }
+  .icon-row {
+    display: flex;
+    gap: 70px;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .icon-circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(30px) scale(0.8);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .scene.active .icon-circle { opacity: 1; transform: translateY(0) scale(1); }
+  .scene.active .icon-circle:nth-child(1) { transition-delay: 0.1s; }
+  .scene.active .icon-circle:nth-child(2) { transition-delay: 0.35s; }
+  .scene.active .icon-circle:nth-child(3) { transition-delay: 0.6s; }
+  .scene.active .icon-circle:nth-child(4) { transition-delay: 0.85s; }
+  .alert-dot {
+    position: absolute;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: #EF4444;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.3); opacity: 0.4; }
+  }
+  .counter {
+    font-size: 4.5rem;
+    font-weight: 700;
+    color: #EF4444;
+  }
+  .emoji-flood {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    max-width: 640px;
+  }
+  .emoji-flood span {
+    font-size: 1.8rem;
+    opacity: 0;
+    transform: scale(0.4);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .emoji-flood span.show { opacity: 1; transform: scale(1); }
+  .progress-track {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 50;
+  }
+  .progress-seg {
+    width: 40px;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.15);
+    transition: background 0.3s ease;
+  }
+  .progress-seg.done { background: #2563EB; }
+  .progress-seg.current { background: #93B4F0; }
+  .nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(100,116,139,0.55);
+    color: #FFFFFF;
+    font-size: 1.6rem;
+    cursor: pointer;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+  }
+  .nav-arrow:hover { background: rgba(100,116,139,0.8); }
+  .nav-arrow.prev { left: 30px; }
+  .nav-arrow.next { right: 30px; }
+  .nav-arrow:disabled { opacity: 0.25; cursor: default; }
+  .nav-arrow:disabled:hover { background: rgba(100,116,139,0.55); }
+  .step-label {
+    position: absolute;
+    bottom: 40px;
+    left: 60px;
+    font-size: 0.9rem;
+    letter-spacing: 0.15rem;
+    opacity: 0.5;
+  }
+  .replay-btn {
+    margin-top: 3rem;
+    padding: 14px 36px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 8px;
+    border: none;
+    background: #2563EB;
+    color: #FFFFFF;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.6s ease 1.2s, transform 0.6s ease 1.2s;
+  }
+  .scene.active .replay-btn { opacity: 1; transform: translateY(0); }
+  .checkmark-float {
+    position: absolute;
+    color: #10B981;
+    font-size: 1.8rem;
+    font-weight: 700;
+    opacity: 0;
+  }
+  .scene.active .checkmark-float { animation: floatUp 2s ease forwards; }
+  @keyframes floatUp {
+    0% { opacity: 0; transform: translateY(20px) scale(0.6); }
+    30% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-60px) scale(1); }
+  }
+  .case-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(239,68,68,0.4);
+    border-radius: 14px;
+    padding: 2rem 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 640px;
+  }
+  .case-icon {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: #EF4444;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .case-amount { font-size: 2.2rem; font-weight: 700; color: #FFFFFF; margin-bottom: 0.3rem; }
+  .case-detail { font-size: 1.1rem; color: #F1A9A9; }
+  .debate-row {
+    display: flex;
+    gap: 50px;
+    align-items: flex-start;
+  }
+  .debate-card {
+    width: 380px;
+    border-radius: 14px;
+    padding: 1.5rem 1.75rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .scene.active .debate-card { opacity: 1; transform: translateY(0); }
+  .scene.active .debate-card.left { transition-delay: 0.15s; }
+  .scene.active .debate-card.right { transition-delay: 0.5s; }
+  .debate-card.left { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.5); }
+  .debate-card.right { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.5); }
+  .debate-label { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.1rem; margin-bottom: 0.9rem; }
+  .debate-quote { font-size: 1.05rem; line-height: 1.5; margin-bottom: 0.7rem; font-style: italic; }
+  .vs-badge {
+    align-self: center;
+    margin-top: 2.5rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #64748B;
+  }
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 640px;
+  }
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.2rem;
+    opacity: 0;
+    transform: translateX(-15px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .scene.active .check-row { opacity: 1; transform: translateX(0); }
+  .scene.active .check-row:nth-child(1) { transition-delay: 0.1s; }
+  .scene.active .check-row:nth-child(2) { transition-delay: 0.35s; }
+  .scene.active .check-row:nth-child(3) { transition-delay: 0.6s; }
+  .scene.active .check-row:nth-child(4) { transition-delay: 0.85s; }
+  .check-mark {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .lane-row {
+    display: flex;
+    gap: 40px;
+  }
+  .lane-box {
+    width: 220px;
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-align: center;
+    border: 2px solid transparent;
+    opacity: 0.35;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .lane-box.hit {
+    opacity: 1;
+    transform: scale(1.06);
+    border-color: #F59E0B;
+  }
+  .lane-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .lane-sub { font-size: 0.95rem; color: #94A3B8; }
+  .stat-compare {
+    display: flex;
+    gap: 60px;
+    align-items: center;
+  }
+  .stat-block { text-align: center; }
+  .stat-num { font-size: 3.5rem; font-weight: 700; }
+  .emoji-grid { font-size: 1.7rem; line-height: 1.7; text-align: center; }
+  .stat-label { font-size: 1rem; color: #94A3B8; margin-top: 0.3rem; }
+  .stat-arrow { font-size: 2rem; color: #64748B; }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+  <div class="progress-track" id="progressTrack"></div>
+
+  <button class="nav-arrow prev" id="prevBtn" onclick="prevScene()" aria-label="Previous slide">&#8249;</button>
+  <button class="nav-arrow next" id="nextBtn" onclick="nextScene()" aria-label="Next slide">&#8250;</button>
+
+  <!-- SCENE 1: Establishing -->
+  <div class="scene active" data-bg="dark" style="color:#FFFFFF; background:#0B1220;">
+    <div class="eyebrow" style="color:#2563EB;">👩‍💼 MEET MARIA</div>
+    <div class="headline">Senior Auditor. Twelve years in the seat.</div>
+    <div class="avatar-wrap"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400" style="position:absolute;width:220px;height:220px;border-radius:50%;object-fit:cover;opacity:.9;">
+      <div class="avatar-circle" style="background:#2563EB;">
+        <svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
+          <path d="M4 20.5c0-4.4 3.6-6.5 8-6.5s8 2.1 8 6.5"/>
+        </svg>
+      </div>
+      <div class="mood-badge" style="color:#2563EB;">🙂</div>
+    </div>
+    <div class="story-line" style="color:#94A3B8;">She signs the opinion. Every time. That's the job.</div>
+    <div class="step-label">1 / 10</div>
+  </div>
+
+  <!-- SCENE 2: Problem builds -->
+  <div class="scene" data-bg="dark" style="color:#FFFFFF; background:#1a0f0f;">
+    <div class="eyebrow" style="color:#EF4444;">🗂️ THEN THE QUARTER ENDS</div>
+    <div class="headline">So many cases. So little time.</div>
+    <div class="emoji-flood" id="emojiFlood"></div>
+    <div class="story-line" style="color:#CBD5E1; margin-top:1.5rem;">She has three days. And a coffee that's gone cold twice. ☕</div>
+    <div class="step-label">2 / 10</div>
+  </div>
+
+  <!-- SCENE 3: Peak problem -->
+  <div class="scene" data-bg="dark" style="color:#FFFFFF; background:#1a0f0f;">
+    <div class="eyebrow" style="color:#EF4444;">🚨 SHE'S DROWNING</div>
+    <div class="headline">Real fraud hides. False alarms cry wolf.</div>
+    <div class="avatar-wrap">
+      <div class="avatar-circle" style="background:#EF4444;">
+        <svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
+          <path d="M4 20.5c0-4.4 3.6-6.5 8-6.5s8 2.1 8 6.5"/>
+        </svg>
+      </div>
+      <div class="alert-dot" style="top:-6px; left:-6px; animation-delay:0s;"></div>
+      <div class="alert-dot" style="top:-6px; right:-6px; animation-delay:0.3s;"></div>
+      <div class="alert-dot" style="bottom:10px; left:-16px; animation-delay:0.6s;"></div>
+      <div class="alert-dot" style="bottom:10px; right:-16px; animation-delay:0.9s;"></div>
+      <div class="mood-badge" style="color:#EF4444; top:auto; right:auto; bottom:-20px; left:50%; transform:translateX(-50%);">😰</div>
+    </div>
+    <div class="story-line" style="color:#F1A9A9;">Only a handful of cases ever really get looked at. 😥</div>
+    <div class="step-label">3 / 10</div>
+  </div>
+
+  <!-- SCENE 4: One case, up close (NEW) -->
+  <div class="scene" data-bg="dark" style="color:#FFFFFF; background:#1a0f0f;">
+    <div class="eyebrow" style="color:#EF4444;">🔍 ONE CASE, UP CLOSE</div>
+    <div class="headline">One strange case lands on her screen</div>
+    <div class="case-card">
+      <div class="case-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+          <path d="M14 3v6h6"/>
+          <path d="M8 13h8M8 17h5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="case-amount">💰💰💰 to a vendor she's never heard of 🏢❓</div>
+        <div class="case-detail">Suspiciously round amount. No history. Posted at 🌙 midnight.</div>
+      </div>
+    </div>
+    <div class="story-line" style="color:#F1A9A9;">She has ninety seconds to decide if this is a red flag or a Tuesday. 😟</div>
+    <div class="step-label">4 / 10</div>
+  </div>
+
+  <!-- SCENE 5: Turning point -->
+  <div class="scene" data-bg="dark" style="color:#FFFFFF; background:#0B1220;">
+    <div class="eyebrow" style="color:#2563EB;">🤖 THEN, SOMETHING CHANGED</div>
+    <div class="headline">👩 Maria got a new crew</div>
+    <div class="icon-row">
+      <div class="icon-circle" style="background:#2563EB;">
+        <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="7"/><path d="M20.5 20.5l-4.8-4.8"/></svg>
+      </div>
+      <div class="icon-circle" style="background:#EF4444;">
+        <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h16v12H9.5l-4.5 4v-4H4z"/></svg>
+      </div>
+      <div class="icon-circle" style="background:#10B981;">
+        <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5h16v12H9.5l-4.5 4v-4H4z"/></svg>
+      </div>
+      <div class="icon-circle" style="background:#F59E0B;">
+        <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>
+      </div>
+    </div>
+    <div class="story-line" style="color:#94A3B8;">Evidence. Challenger. Defender. Verifier. Four specialists, one case. 🙌</div>
+    <div class="step-label">5 / 10</div>
+  </div>
+
+  <!-- SCENE 6: The debate (NEW) -->
+  <div class="scene" data-bg="dark" style="color:#FFFFFF; background:#0B1220;">
+    <div class="eyebrow" style="color:#2563EB;">⚖️ THE SIGNATURE MOMENT</div>
+    <div class="headline">The crew argues it out</div>
+    <div class="debate-row">
+      <div class="debate-card left">
+        <div class="debate-label" style="color:#F87171;">CHALLENGER</div>
+        <div class="debate-quote">"Round-number amount, just under the approval limit."</div>
+        <div class="debate-quote">"New vendor, no prior history. Posted at midnight."</div>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="debate-card right">
+        <div class="debate-label" style="color:#34D399;">DEFENDER</div>
+        <div class="debate-quote">"Vendor is verified in the registry, valid tax ID."</div>
+        <div class="debate-quote">"Amount matches an approved PO and contract."</div>
+      </div>
+    </div>
+    <div class="story-line" style="color:#94A3B8;">Neither one gets the last word. The Adjudicator does.</div>
+    <div class="step-label">6 / 10</div>
+  </div>
+
+  <!-- SCENE 7: Evidence checked (NEW) -->
+  <div class="scene" data-bg="light" style="color:#151A2D; background:#F5F7FB;">
+    <div class="eyebrow" style="color:#2563EB;">✅ GROUNDED, NOT GUESSED</div>
+    <div class="headline">Every claim, checked against a real source</div>
+    <div class="checklist">
+      <div class="check-row">
+        <div class="check-mark" style="background:#D1FAE5;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+        </div>
+        <span>Vendor exists in the master registry</span>
+      </div>
+      <div class="check-row">
+        <div class="check-mark" style="background:#D1FAE5;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+        </div>
+        <span>Amount matches an approved PO</span>
+      </div>
+      <div class="check-row">
+        <div class="check-mark" style="background:#D1FAE5;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+        </div>
+        <span>FX rate matches the transaction date</span>
+      </div>
+      <div class="check-row">
+        <div class="check-mark" style="background:#FEE2E2;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <span>"Flagged by a competitor" &#8212; unsupported, struck out</span>
+      </div>
+    </div>
+    <div class="story-line" style="color:#64748B;">No citation, no claim. That last one never makes it into the file. 😌</div>
+    <div class="step-label">7 / 10</div>
+  </div>
+
+  <!-- SCENE 8: The verdict (NEW) -->
+  <div class="scene" data-bg="dark" style="color:#FFFFFF; background:#0B1220;">
+    <div class="eyebrow" style="color:#F59E0B;">🚦 THE VERDICT</div>
+    <div class="headline">Where does this case go?</div>
+    <div class="lane-row">
+      <div class="lane-box" style="background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.3);">
+        <div class="lane-title" style="color:#34D399;">🟢 Auto-clear</div>
+        <div class="lane-sub">confident & clean</div>
+      </div>
+      <div class="lane-box hit" style="background:rgba(245,158,11,0.12);">
+        <div class="lane-title" style="color:#F59E0B;">🟡 Human review</div>
+        <div class="lane-sub">needs a second look</div>
+      </div>
+      <div class="lane-box" style="background:rgba(239,68,68,0.08); border-color:rgba(239,68,68,0.3);">
+        <div class="lane-title" style="color:#F87171;">🔴 Escalate</div>
+        <div class="lane-sub">dig deeper</div>
+      </div>
+    </div>
+    <div class="story-line" style="color:#94A3B8;">Not confident enough to auto-clear. Not risky enough to escalate. Straight to 👩 Maria. 👀</div>
+    <div class="step-label">8 / 10</div>
+  </div>
+
+  <!-- SCENE 9: Resolution -->
+  <div class="scene" data-bg="dark" style="color:#FFFFFF; background:#08130f;">
+    <div class="eyebrow" style="color:#10B981;">✍️ BACK WHERE IT STARTED</div>
+    <div class="headline">👩 Maria signs with confidence</div>
+    <div class="avatar-wrap">
+      <div class="avatar-circle" style="background:#10B981;">
+        <svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
+          <path d="M4 20.5c0-4.4 3.6-6.5 8-6.5s8 2.1 8 6.5"/>
+          <circle cx="18.5" cy="17.5" r="4.6" fill="#10B981" stroke="none"/>
+          <path d="M16.6 17.6l1.2 1.2 2.2-2.3" stroke="#FFFFFF" stroke-width="1.4"/>
+        </svg>
+      </div>
+      <div class="mood-badge" style="color:#10B981;">😊</div>
+    </div>
+    <div class="story-line" style="color:#94A3B8;">The 💰 payment clears &#8212; cited, argued, and signed in minutes, not days. 🎉</div>
+    <div class="step-label">9 / 10</div>
+  </div>
+
+  <!-- SCENE 10: Epilogue (NEW) -->
+  <div class="scene" data-bg="dark" style="color:#FFFFFF; background:#0B1220;">
+    <div class="eyebrow" style="color:#2563EB;">📈 THREE MONTHS LATER</div>
+    <div class="headline">From barely-checked to fully-checked</div>
+    <div class="stat-compare">
+      <div class="stat-block">
+        <div class="emoji-grid">📄📄🔍📄<br>📄📄📄📄<br>📄📄📄📄</div>
+        <div class="stat-label">before &#8212; one in twenty</div>
+      </div>
+      <div class="stat-arrow">&#8594;</div>
+      <div class="stat-block">
+        <div class="emoji-grid">🔍🔍🔍🔍<br>🔍🔍🔍🔍<br>🔍🔍🔍🔍</div>
+        <div class="stat-label">after &#8212; every single one</div>
+      </div>
+    </div>
+    <div class="story-line" style="color:#94A3B8;">Same 👩 Maria. Same judgment. Just no longer drowning. 🎉</div>
+    <button class="replay-btn" onclick="restartStory()">🔁 Watch it again</button>
+    <div class="step-label">10 / 10</div>
+  </div>
+
+</div>
+
+<script>
+  const scenes = document.querySelectorAll('.scene');
+  const total = scenes.length;
+  let current = 0;
+  const track = document.getElementById('progressTrack');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  for (let i = 0; i < total; i++) {
+    const seg = document.createElement('div');
+    seg.className = 'progress-seg';
+    seg.id = 'seg' + i;
+    track.appendChild(seg);
+  }
+
+  function updateProgress() {
+    for (let i = 0; i < total; i++) {
+      const seg = document.getElementById('seg' + i);
+      seg.classList.remove('done', 'current');
+      if (i < current) seg.classList.add('done');
+      if (i === current) seg.classList.add('current');
+    }
+    prevBtn.disabled = (current === 0);
+    nextBtn.disabled = (current === total - 1);
+  }
+
+  function showScene(i) {
+    scenes.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    updateProgress();
+    if (i === 1) spawnEmojiFlood();
+  }
+
+  function spawnEmojiFlood() {
+    const el = document.getElementById('emojiFlood');
+    if (!el) return;
+    el.innerHTML = '';
+    const count = 24;
+    for (let i = 0; i < count; i++) {
+      const span = document.createElement('span');
+      span.textContent = '📄';
+      el.appendChild(span);
+    }
+    requestAnimationFrame(() => {
+      const spans = el.querySelectorAll('span');
+      spans.forEach((s, idx) => {
+        setTimeout(() => s.classList.add('show'), idx * 35);
+      });
+    });
+  }
+
+  function nextScene() {
+    if (current < total - 1) { current++; showScene(current); }
+  }
+
+  function prevScene() {
+    if (current > 0) { current--; showScene(current); }
+  }
+
+  function restartStory() {
+    current = 0;
+    showScene(current);
+  }
+
+  showScene(0);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') nextScene();
+    if (e.key === 'ArrowLeft') prevScene();
+  });
+</script>
+
+</body>
+</html>
