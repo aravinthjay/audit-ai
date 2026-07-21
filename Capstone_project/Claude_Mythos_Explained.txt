@@ -1,0 +1,96 @@
+CLAUDE MYTHOS — EXPLAINED
+(Reasoning, Agents & GitHub Copilot)
+=====================================
+
+1. WHAT IS "MYTHOS"?
+---------------------
+Mythos is Anthropic's newest and highest capability tier for Claude models —
+positioned above the Opus tier. It was introduced with two models built on
+the same underlying system:
+
+  - Claude Mythos 5   — limited release, currently used only by a small
+                         number of trusted organizations through Anthropic's
+                         "Project Glasswing" program. It does NOT include the
+                         extra safety classifiers described below.
+  - Claude Fable 5     — the broadly available version of the same
+                         Mythos-class model. It has additional safety
+                         measures layered on for sensitive domains
+                         (biology, cybersecurity, and LLM research/
+                         development), so most people encounter Mythos-level
+                         capability through Fable 5.
+
+Both launched June 9, 2026. Access was briefly suspended (June 12–July 1,
+2026) to comply with U.S. Department of Commerce export controls, then
+restored once those controls were lifted.
+
+2. REASONING
+------------
+Mythos-class models are built for extended, high-quality reasoning:
+
+  - Long context handling: 1M-token context window by default, with up to
+    128k output tokens per request.
+  - Reported benchmark strength: strong results on SWE-bench Pro and
+    SWE-bench Verified (coding), Terminal-Bench (command-line tasks),
+    GDPval-AA, and OSWorld-Verified (computer-use tasks).
+  - Reasoning quality is described as a clear step beyond Opus 4.8,
+    especially on complex, multi-step problems — finance/legal analysis,
+    detailed vision tasks, and research synthesis.
+  - Lower "error propagation": in multi-step or agentic workflows, mistakes
+    early on tend to compound. Mythos-class models are specifically trained
+    to reduce this compounding effect.
+
+3. AGENTS
+---------
+This is where the Mythos tier is most differentiated — it's built for
+long-running, multi-stage, semi-autonomous work rather than short chat-style
+exchanges:
+
+  - Tool use & orchestration: reliably calls external tools, APIs, and
+    sub-agents across long task sequences.
+  - Long-horizon autonomy: designed for tasks like large-scale code
+    refactoring, multi-document research synthesis, and complex,
+    document-heavy workflows that unfold over many steps.
+  - Stronger instruction-following: better at holding onto complex,
+    conditional instructions spread across a long prompt or task.
+  - Safety layer (Fable 5 specifically): built-in classifiers monitor for
+    misuse in three areas — cybersecurity, biology/chemistry, and model
+    distillation. If a request trips one of these, Fable 5 declines and
+    the request is automatically routed to Claude Opus 4.8 instead, with
+    the user notified. On the API this shows up as a normal HTTP 200
+    response with stop_reason: "refusal" (not an error), and the user
+    isn't billed at Fable-tier pricing for a refused request.
+    Claude Mythos 5 does not include this classifier layer.
+
+4. GITHUB COPILOT INTEGRATION
+------------------------------
+  - Claude Fable 5 is rolling out generally in GitHub Copilot, covering
+    Copilot Pro+, Max, Business, and Enterprise plans.
+  - Surfaces include: VS Code (chat, ask, edit, and agent modes), Visual
+    Studio, JetBrains IDEs, Xcode, Eclipse, Copilot CLI, the GitHub Copilot
+    cloud agent, github.com, and mobile.
+  - Business/Enterprise admins must explicitly enable the model policy for
+    it to appear — it's off by default, and rollout to individual tenants
+    may be gradual.
+  - Enterprise note: using Fable 5 in Copilot requires 30-day data
+    retention, which differs from the Zero Data Retention setup many
+    enterprise Copilot rollouts were originally approved under — worth
+    checking with your admin/compliance team before enabling it broadly.
+  - It's also available via Microsoft Foundry (Foundry Models and Foundry
+    Agent Service) for building custom autonomous agents outside of the
+    Copilot product itself.
+
+5. QUICK SUMMARY
+-----------------
+  - Mythos = Anthropic's top capability tier, above Opus.
+  - Mythos 5  = limited-release version, no extra safety classifiers.
+  - Fable 5   = the same core model, generally available, with safety
+                classifiers for biology/cyber/distillation risks.
+  - Strength = long-context reasoning + reliable multi-step agentic tool
+                use, tuned for hard, long-running autonomous work.
+  - Copilot = Fable 5 is live across most GitHub Copilot surfaces, opt-in
+                for enterprise, with a fallback-to-Opus-4.8 safety design.
+
+Source: Anthropic's official announcement and documentation, current as of
+July 2026. Product details can change — check
+https://www.anthropic.com/news/fable-mythos-access and
+https://platform.claude.com/docs for the latest.

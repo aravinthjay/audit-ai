@@ -1,0 +1,49 @@
+Claude Mythos: Reasoning, Agents, and Copilot
+
+1. Reasoning
+
+Reasoning refers to Claude’s ability to analyze complex problems step by
+step before providing an answer. It is useful for coding, planning,
+debugging, financial analysis, and decision-making.
+
+Example: - Analyze the problem. - Compare possible solutions. -
+Recommend the best approach with justification.
+
+In short: Reasoning = Think before answering.
+
+2. Agents
+
+An AI Agent uses Claude as its reasoning engine and can also plan tasks,
+use tools (APIs, databases, web search), and perform actions to complete
+a goal with minimal human intervention.
+
+Example: An Expense Audit Agent can: - Read invoices. - Validate GST
+details. - Detect duplicate invoices. - Generate an audit report. - Send
+the report for approval.
+
+In short: Agent = Think + Plan + Act.
+
+3. Copilot
+
+A Copilot is an AI assistant that works alongside a human. It provides
+suggestions, explanations, summaries, and drafts, but the human makes
+the final decision.
+
+Example: - Suggests code. - Drafts emails. - Explains SQL queries. -
+Summarizes documents.
+
+In short: Copilot = Think + Assist.
+
+Comparison
+
+Reasoning: - Solves complex problems. - Does not perform actions.
+
+Agent: - Solves problems and performs tasks automatically. - Uses tools
+and APIs.
+
+Copilot: - Helps the user perform tasks. - Leaves the final decision to
+the user.
+
+Easy Way to Remember
+
+Reasoning = Think Agent = Think + Act Copilot = Think + Assist
